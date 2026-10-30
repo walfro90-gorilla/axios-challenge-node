@@ -33,7 +33,7 @@ function parseTeamInput(body = {}) {
   const { name, pokemon } = body;
 
   if (typeof name !== 'string' || !name.trim()) {
-    throw HttpError.badRequest('El campo "name" es obligatorio');
+    throw HttpError.badRequest('El campo "name" es obligatorio y debe ser un texto no vacío');
   }
   if (name.trim().length > MAX_NAME_LENGTH) {
     throw HttpError.badRequest(`El campo "name" admite máximo ${MAX_NAME_LENGTH} caracteres`);
