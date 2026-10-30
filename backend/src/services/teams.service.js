@@ -96,6 +96,10 @@ export async function createTeam(userId, body) {
 
 /** Elimina un equipo del usuario; 404 si no existe o es ajeno. */
 export async function deleteTeam(userId, teamId) {
+  // SQLite convierte '1.0' en 1 por afinidad de tipos; sólo aceptamos dígitos.
+  if (!/^\d+$/.test(String(teamId))) {
+    throw HttpError.notFound('Equipo no encontrado');
+  }
   const deleted = await Team.destroy({ where: { id: teamId, userId } });
   if (!deleted) {
     throw HttpError.notFound('Equipo no encontrado');
