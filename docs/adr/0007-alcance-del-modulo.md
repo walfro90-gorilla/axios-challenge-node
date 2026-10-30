@@ -32,6 +32,7 @@ El reto está calibrado para ~1 hora y la rúbrica premia "poco código bien hec
 - Validar especies reales (`/pokemon-species/`) y normalizar ids con ceros a la izquierda (ADR-0005).
 - Manejo genérico de errores 4xx de body-parser (`413` payload muy grande, etc.) (ADR-0008).
 - Reintentos ante `429`/`5xx` de la PokeAPI.
+- Concurrencia de escritura en SQLite: `POST` simultáneos pueden dar `500 SQLITE_BUSY` (ADR-0006). `retry` de Sequelize o modo WAL; en producción, Postgres.
 - Agregar equipos de ejemplo al seed. Implicaría tocar `seed.js`; se evalúa por separado porque no es requisito.
 
 ## Alternativas consideradas

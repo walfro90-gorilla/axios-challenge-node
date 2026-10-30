@@ -39,3 +39,8 @@ Además, SQLite bloquea la base completa durante una transacción de escritura, 
 - **+** Todo o nada: nunca hay equipos parciales.
 - **+** La transacción dura sólo lo que tardan las escrituras locales.
 - **−** Una lectura extra tras crear el equipo para devolverlo con sus miembros. Costo despreciable.
+- **−** **Limitación conocida: concurrencia de escritura en SQLite** (detectada en la revisión independiente y reproducida). El dialecto SQLite de Sequelize abre una **conexión aparte por transacción**; con varios `POST /api/teams` simultáneos, esas conexiones compiten por el lock de escritura de SQLite y algunas fallan con `SQLITE_BUSY` → **500**. Medido contra el servidor dev: con 20 POST en paralelo, 13 respondieron 500.
+  - Favoritos no lo sufre porque no usa transacciones (todo va por la conexión compartida, serializada).
+  - Se probó configurar `busyTimeout` en cada conexión (hook `afterConnect`) y **no** lo resolvió; se revirtió.
+  - Se acepta para el alcance del reto: el uso real es de un usuario creando equipos de a uno, y renunciar a la atomicidad sería peor. En producción, con Postgres/MySQL (bloqueo por fila) el problema desaparece. Alternativas para más adelante: `retry` de Sequelize ante `SQLITE_BUSY`, o modo WAL. Anotado en "qué haría con más tiempo" (ADR-0007).
+  - Por lo mismo, los tests **no** deben crear equipos en paralelo (`Promise.all` de POST) sobre la BD `:memory:`.

@@ -34,6 +34,7 @@ Un equipo puede requerir hasta 6 consultas. La PokeAPI es pública y pide uso ra
 - **+** Cero lógica de integración duplicada; cualquier mejora del servicio (caché, reintentos) beneficia a Teams.
 - **+** En los tests, `mockPokeApi` de `tests/helpers.js` funciona sin cambios, porque mockea `fetch`, que es lo que usa el servicio.
 - **−** Con `Promise.all`, si una especie falla las demás peticiones en curso terminan igualmente (sus resultados se descartan, aunque quedan en caché). Costo despreciable.
+- **−** **Código de error no determinista en fallos mixtos:** si en una misma petición una especie no existe (`422`) y otra consulta falla por red (`502`), gana el primer rechazo que llegue, así que la misma petición puede responder `422` o `502`. Ambos son correctos para el cliente (la petición no se procesó). Hacerlo determinista requeriría `Promise.allSettled` y una regla de precedencia (alternativa 2, pospuesta).
 - **−** La caché es por proceso y en memoria; en un despliegue con varias instancias sería Redis o similar (ya anotado en el servicio).
 - **−** **Limitación heredada (verificada contra la PokeAPI real):** el servicio consulta `/pokemon/{nameOrId}`, que identifica **formas**, no especies. Consecuencias:
   - `deoxys` → `404` (hay que usar `deoxys-normal`), igual con otras especies que tienen varias formas.

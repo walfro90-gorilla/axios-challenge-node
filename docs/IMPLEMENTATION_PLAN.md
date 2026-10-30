@@ -211,7 +211,8 @@ Si hay correcciones: `fix(teams): …`, una por hallazgo.
 |---|---|
 | El servidor dev (`--watch`) se cae a media edición por imports incompletos | Es esperado; reinicia solo al guardar el archivo completo. Validar al cierre de cada fase |
 | `sync()` no altera tablas ya existentes en `data/dev.sqlite` | Las tablas de Teams son nuevas, así que `sync()` las crea. Si se cambia el esquema después: `npm run seed` |
-| La cascada no se ejecuta en SQLite | Sequelize activa `PRAGMA foreign_keys=ON` por defecto. El test 7 lo cubre de forma indirecta; verificar también en la fase 5 que no queden filas en `team_members` |
+| La cascada no se ejecuta en SQLite | Sequelize activa `PRAGMA foreign_keys=ON` por defecto. El test de eliminación verifica `TeamMember.count() === 0` tras el `DELETE` (agregado tras la revisión de la fase 6) |
+| `POST` concurrentes → `500 SQLITE_BUSY` (detectado en la fase 6) | Limitación aceptada y documentada en el ADR-0006; los tests no crean equipos en paralelo |
 | `PR` abierto por error contra el repo original (ventamovil) | Usar siempre `--repo walfro90-gorilla/axios-challenge-node` (fase 7) |
 | Definir la FK en `hasMany` y `belongsTo` con opciones distintas hace que una pise a la otra (`allowNull`) | Mismo objeto `foreignKey` en ambas; verificar el esquema real al cerrar la fase 1 |
 | Ordenar `members` dentro de un `include` en Sequelize es propenso a errores de sintaxis | Usar `order: [[{ model: TeamMember, as: 'members' }, 'id', 'ASC']]` y cubrirlo en el test 1 |

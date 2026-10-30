@@ -35,7 +35,7 @@ Cada elemento de `pokemon` acepta nombre o id (igual que Favoritos, que delega e
 | Especie inexistente en la PokeAPI | `422` (lo lanza `assertSpeciesExists`) |
 | Misma especie repetida en el equipo | `409` |
 | PokeAPI caída / responde error | `502` (ya lo maneja el servicio) |
-| `DELETE` con `:id` inexistente, no numérico o ajeno | `404` (ADR-0004) |
+| `DELETE` con `:id` inexistente, ajeno o que no sea sólo dígitos (`abc`, `1abc`, `1.0`) | `404` (ADR-0004). Se valida `/^\d+$/` porque SQLite convierte `'1.0'` en `1` por afinidad de tipos y borraría el equipo 1 |
 | Éxito | `GET 200 { data: [...] }` · `POST 201 { ...team, members }` · `DELETE 204` |
 
 ### Orden de validación (de lo más barato a lo más caro)
@@ -59,3 +59,4 @@ Cada elemento de `pokemon` acepta nombre o id (igual que Favoritos, que delega e
 - **+** Respuestas predecibles y alineadas con el criterio ya usado en el boilerplate.
 - **+** Se evitan llamadas innecesarias a la PokeAPI (rate-limit) en peticiones inválidas.
 - **−** Sólo se reporta el **primer** error encontrado, no todos a la vez. Aceptable para el alcance.
+- **−** **Asimetría en la validación de forma:** los números se validan localmente (`-1`, `0`, `6.5` → `400`), pero los strings sólo se exigen no vacíos; `"-1"`, `"0"` o `"6.0"` llegan a la PokeAPI y terminan en `422`. Es intencional: interpretar strings (nombres, ids, formas) es responsabilidad de `pokeapi.service.js` y duplicar esa lógica aquí iría contra el ADR-0005. Costo: como mucho 6 llamadas en una petición inválida.
