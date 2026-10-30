@@ -18,6 +18,7 @@ const withMembers = {
   include: [{ model: TeamMember, as: 'members' }],
   order: [
     ['created_at', 'DESC'],
+    ['id', 'DESC'],
     [{ model: TeamMember, as: 'members' }, 'id', 'ASC'],
   ],
 };
