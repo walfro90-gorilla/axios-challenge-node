@@ -1,6 +1,6 @@
 # ADR-0008: JSON con sintaxis inválida responde `400`, no `500`
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-30
 
 ## Contexto

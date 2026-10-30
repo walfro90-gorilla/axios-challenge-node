@@ -1,6 +1,6 @@
 # ADR-0002: Reglas de negocio en `teams.service.js`, controlador delgado
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-30
 
 ## Contexto

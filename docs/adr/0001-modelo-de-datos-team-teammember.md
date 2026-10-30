@@ -1,6 +1,6 @@
 # ADR-0001: Modelo de datos `Team` + `TeamMember` en tablas separadas
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-30
 
 ## Contexto

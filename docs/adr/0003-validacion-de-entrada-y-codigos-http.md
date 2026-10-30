@@ -1,6 +1,6 @@
 # ADR-0003: Validación de entrada, orden de validaciones y códigos HTTP
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-30
 
 ## Contexto

@@ -1,6 +1,6 @@
 # ADR-0005: Validación de especies reutilizando `pokeapi.service.js`
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-30
 
 ## Contexto

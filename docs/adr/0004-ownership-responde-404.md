@@ -1,6 +1,6 @@
 # ADR-0004: Ownership — equipos ajenos responden `404`, no `403`
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-30
 
 ## Contexto

@@ -1,6 +1,6 @@
 # ADR-0007: Alcance — qué entra y qué queda fuera
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-30
 
 ## Contexto

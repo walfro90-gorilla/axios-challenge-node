@@ -1,6 +1,6 @@
 # ADR-0006: Creación atómica de equipo + miembros en una transacción
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-30
 
 ## Contexto

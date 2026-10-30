@@ -69,13 +69,16 @@ npm test
 | POST | `/api/favorites` | ✅ | Agrega un favorito |
 | PATCH | `/api/favorites/:id` | ✅ | Actualiza el nickname |
 | DELETE | `/api/favorites/:id` | ✅ | Elimina un favorito |
+| GET | `/api/teams` | ✅ | Lista tus equipos con sus miembros |
+| POST | `/api/teams` | ✅ | Crea un equipo `{ name, pokemon: [nombre o id, …] }` (1–6, sin repetidos) |
+| DELETE | `/api/teams/:id` | ✅ | Elimina un equipo propio |
 
 ## Estructura
 
 ```
 backend/         API Express + Sequelize (auth, pokemon, favorites)
 frontend/        React + Vite (login + pantalla de favoritos)
-docs/            Arquitectura, plantilla de uso de IA, rúbrica de evaluación
+docs/            Arquitectura, ADRs (docs/adr/), plan de implementación, uso de IA, rúbrica
 CHALLENGE.md     El reto que debes resolver
 ```
 
