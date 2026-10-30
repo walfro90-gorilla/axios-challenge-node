@@ -16,6 +16,11 @@ export function errorHandler(err, _req, res, _next) {
     return res.status(err.statusCode).json({ error: err.message, details: err.details });
   }
 
+  // JSON con sintaxis inválida (body-parser) → 400
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'El cuerpo de la petición no es JSON válido' });
+  }
+
   // Errores de validación / unicidad de Sequelize → 400 / 409
   if (err.name === 'SequelizeUniqueConstraintError') {
     return res.status(409).json({ error: 'El recurso ya existe', details: err.errors?.map((e) => e.message) });
