@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { createApp } from '../app.js';
+import { TeamMember } from '../models/index.js';
 import { resetDatabase, closeDatabase, mockPokeApi } from './helpers.js';
 
 const app = createApp();
@@ -65,6 +66,25 @@ describe('Equipos (Teams)', () => {
     expect(list.body.data).toHaveLength(0);
   });
 
+  test('valida la cantidad de miembros antes de consultar la PokeAPI', async () => {
+    const token = await authToken();
+    const mockedFetch = global.fetch;
+    let pokeApiCalls = 0;
+    global.fetch = (...args) => {
+      pokeApiCalls += 1;
+      return mockedFetch(...args);
+    };
+
+    // Nombres inexistentes: los 404 no se cachean, así que cualquier consulta llegaría a fetch.
+    const res = await createTeam(token, {
+      name: 'Demasiados',
+      pokemon: ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7'],
+    });
+
+    expect(res.status).toBe(422);
+    expect(pokeApiCalls).toBe(0);
+  });
+
   test('rechaza un equipo vacío con 422', async () => {
     const token = await authToken();
     const res = await createTeam(token, { name: 'Vacío', pokemon: [] });
@@ -77,6 +97,20 @@ describe('Equipos (Teams)', () => {
     const res = await createTeam(token, { name: 'Fantasma', pokemon: ['pikachu', 'noexiste'] });
 
     expect(res.status).toBe(422);
+    const list = await listTeams(token);
+    expect(list.body.data).toHaveLength(0);
+  });
+
+  test('responde 502 si la PokeAPI no está disponible', async () => {
+    const token = await authToken();
+    global.fetch = async () => {
+      throw new Error('network down');
+    };
+
+    // 'ditto' no se usa en otros tests, así que no está en la caché del servicio.
+    const res = await createTeam(token, { name: 'Sin red', pokemon: ['ditto'] });
+
+    expect(res.status).toBe(502);
   });
 
   test('rechaza el mismo pokémon repetido (por nombre e id) con 409', async () => {
@@ -144,5 +178,23 @@ describe('Equipos (Teams)', () => {
 
     const after = await listTeams(token);
     expect(after.body.data).toHaveLength(0);
+    // La cascada borra también los miembros.
+    expect(await TeamMember.count()).toBe(0);
+  });
+
+  test('responde 404 ante ids no enteros sin borrar nada', async () => {
+    const token = await authToken();
+    const created = await createTeam(token, { name: 'Uno', pokemon: ['pikachu'] });
+    expect(created.body.id).toBe(1);
+
+    for (const id of ['1.0', '1abc', 'abc']) {
+      const del = await request(app)
+        .delete(`/api/teams/${id}`)
+        .set('Authorization', `Bearer ${token}`);
+      expect(del.status).toBe(404);
+    }
+
+    const list = await listTeams(token);
+    expect(list.body.data).toHaveLength(1);
   });
 });
