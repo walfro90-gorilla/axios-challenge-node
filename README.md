@@ -81,7 +81,8 @@ npm test
 ```
 backend/         API Express + Sequelize (auth, pokemon, favorites)
 frontend/        React + Vite (login + pestañas Pokédex paginada, Favoritos y Equipos)
-docs/            Arquitectura, ADRs (docs/adr/), plan de implementación, uso de IA, rúbrica
+docs/            Arquitectura, ADRs (docs/adr/), plan, hallazgos (FINDINGS.md), uso de IA, rúbrica
+AGENTS.md        Memoria del proyecto para agentes de IA (reglas, comandos, trampas conocidas)
 CHALLENGE.md     El reto que debes resolver
 ```
 
