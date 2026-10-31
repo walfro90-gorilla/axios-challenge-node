@@ -13,6 +13,17 @@ export function setToken(token: string | null): void {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
+/** Error de la API con su status HTTP (sigue siendo un `Error` para el código existente). */
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const res = await fetch(`/api${path}`, {
@@ -28,13 +39,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(body.error || `Error HTTP ${res.status}`);
+    throw new ApiError(body.error || `Error HTTP ${res.status}`, res.status);
   }
   return body as T;
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>(path),
+  get: <T>(path: string, options?: RequestInit) => request<T>(path, options),
   post: <T>(path: string, data: unknown) =>
     request<T>(path, { method: 'POST', body: JSON.stringify(data) }),
   patch: <T>(path: string, data: unknown) =>
