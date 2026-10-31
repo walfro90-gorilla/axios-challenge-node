@@ -48,7 +48,9 @@ export function Teams() {
     setIndexError(null);
     loadPokemonIndex()
       .then(setIndex)
-      .catch((err) => setIndexError(err instanceof Error ? err.message : 'Error al cargar el catálogo'));
+      .catch((err) =>
+        setIndexError(err instanceof Error ? err.message : 'Error al cargar el catálogo'),
+      );
   }
 
   useEffect(() => {
@@ -134,7 +136,11 @@ export function Teams() {
           {draft.draft.map((p) => (
             <li key={p.id} className="chip">
               #{p.id} {p.name}
-              <button onClick={() => draft.remove(p.id)} aria-label={`Quitar ${p.name}`} title="Quitar">
+              <button
+                onClick={() => draft.remove(p.id)}
+                aria-label={`Quitar ${p.name}`}
+                title="Quitar"
+              >
                 ×
               </button>
             </li>
@@ -176,7 +182,8 @@ export function Teams() {
                   onMouseEnter={() => setHighlighted(i)}
                   disabled={draft.has(p.id)}
                 >
-                  #{p.id} {p.name} {draft.has(p.id) && <small className="muted">(ya en el equipo)</small>}
+                  #{p.id} {p.name}{' '}
+                  {draft.has(p.id) && <small className="muted">(ya en el equipo)</small>}
                 </button>
               </li>
             ))}
@@ -201,7 +208,9 @@ export function Teams() {
           <li key={t.id} className="card team-card">
             <div>
               <strong>{t.name}</strong>
-              <div className="muted team-members">{t.members.map((m) => m.pokemonName).join(', ')}</div>
+              <div className="muted team-members">
+                {t.members.map((m) => m.pokemonName).join(', ')}
+              </div>
             </div>
             <button onClick={() => deleteTeam(t)}>Eliminar</button>
           </li>
