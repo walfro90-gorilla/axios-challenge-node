@@ -63,7 +63,7 @@ npm test
 | POST | `/api/auth/register` | — | Registra un usuario |
 | POST | `/api/auth/login` | — | Devuelve un JWT |
 | GET | `/api/auth/me` | ✅ | Usuario actual |
-| GET | `/api/pokemon?limit&offset` | ✅ | Listado (proxy PokeAPI) |
+| GET | `/api/pokemon?limit&offset[&details=true]` | ✅ | Listado (proxy PokeAPI); con `details=true` incluye foto y tipos |
 | GET | `/api/pokemon/:name` | ✅ | Detalle de un pokémon |
 | GET | `/api/favorites` | ✅ | Lista tus favoritos |
 | POST | `/api/favorites` | ✅ | Agrega un favorito |
@@ -77,7 +77,7 @@ npm test
 
 ```
 backend/         API Express + Sequelize (auth, pokemon, favorites)
-frontend/        React + Vite (login + pantallas de favoritos y equipos)
+frontend/        React + Vite (login + pestañas Pokédex paginada, Favoritos y Equipos)
 docs/            Arquitectura, ADRs (docs/adr/), plan de implementación, uso de IA, rúbrica
 CHALLENGE.md     El reto que debes resolver
 ```

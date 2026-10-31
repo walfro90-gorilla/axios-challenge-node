@@ -199,6 +199,17 @@ No estaba en el plan original (el ADR-0007 dejaba el frontend fuera). Se agregó
 
 Sin cambios en `Favorites.tsx`, `client.ts` ni `pokeapi.service.js`.
 
+## Fase 9: paginación, foto/tipos y estilos (pedido de revisión)
+
+Pedido posterior: "agregar paginación y que se vea bien".
+
+1. **Backend** (ADR-0011): `GET /api/pokemon?details=true` resuelve foto y tipos en el servidor (1 petición por página desde el navegador). 2 tests nuevos (retrocompatibilidad y detalles).
+2. **Pestaña Pokédex** (ADR-0012): cuadrícula paginada de 20 (« ‹ Página X de 68 › »), caché por página (también de la petición en curso), "+ favorito" con la API existente y "+ equipo" sobre un **borrador compartido** (`TeamDraftContext`) con Equipos.
+3. **Estilos** (ADR-0013): `styles.css` propio, sin dependencias; insignias con los 18 colores de tipo; Favoritos y Login mejoran sin tocar sus archivos.
+4. **Verificación:** 25 tests de backend; E2E de la Pokédex (23 pasos: paginación, caché, favoritos, borrador, 0 errores de consola) y regresión del autocompletado (21 pasos); revisión visual con capturas, que llevó a 3 columnas y a alinear el layout con Favoritos.
+
+Sin cambios en `Favorites.tsx`, `client.ts` ni `pokeapi.service.js`.
+
 ---
 
 ## Mapa de trazabilidad
@@ -217,6 +228,7 @@ Sin cambios en `Favorites.tsx`, `client.ts` ni `pokeapi.service.js`.
 | `AI_USAGE.md` completo | — | 7 | — |
 | Conventional Commits en rama `feat/teams-module` | — | todas | — |
 | Bonus: pantalla de Equipos | 0009, 0010 | 8 | E2E manual (21 pasos) |
+| Pedido de revisión: paginación y estilo | 0011, 0012, 0013 | 9 | `pokemon.test.js` + E2E manual (23 pasos) |
 
 ## Riesgos y mitigaciones
 
