@@ -20,6 +20,10 @@ export function errorHandler(err, _req, res, _next) {
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'El cuerpo de la petición no es JSON válido' });
   }
+  // Cuerpo mayor al límite de body-parser (100 KB) → 413 (ver ADR-0016)
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'El cuerpo de la petición es demasiado grande' });
+  }
 
   // Errores de validación / unicidad de Sequelize → 400 / 409
   if (err.name === 'SequelizeUniqueConstraintError') {

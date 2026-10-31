@@ -51,4 +51,21 @@ describe('Listado de pokémon', () => {
       { id: 4, name: 'charmander', sprite: 'char.png', types: ['fire'] },
     ]);
   });
+
+  test('un nombre que no es slug responde 404 sin consultar la PokeAPI', async () => {
+    const token = await authToken();
+    let calls = 0;
+    const mocked = global.fetch;
+    global.fetch = (...args) => {
+      calls += 1;
+      return mocked(...args);
+    };
+
+    const res = await request(app)
+      .get(`/api/pokemon/${encodeURIComponent('<script>')}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+    expect(calls).toBe(0);
+  });
 });

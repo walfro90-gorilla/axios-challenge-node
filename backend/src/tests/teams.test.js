@@ -141,6 +141,7 @@ describe('Equipos (Teams)', () => {
     ['sin name', { pokemon: ['pikachu'] }],
     ['pokemon no es arreglo', { name: 'X', pokemon: 'pikachu' }],
     ['elemento inválido', { name: 'X', pokemon: ['pikachu', -1] }],
+    ['nombre con caracteres no válidos', { name: 'X', pokemon: ['../users'] }],
   ])('responde 400 ante cuerpo mal formado (%s)', async (_caso, body) => {
     const token = await authToken();
     const res = await createTeam(token, body);
@@ -157,6 +158,13 @@ describe('Equipos (Teams)', () => {
       .send('{bad json');
 
     expect(res.status).toBe(400);
+  });
+
+  test('responde 413 (no 500) ante un cuerpo demasiado grande', async () => {
+    const token = await authToken();
+    const res = await createTeam(token, { name: 'x'.repeat(200_000), pokemon: ['pikachu'] });
+
+    expect(res.status).toBe(413);
   });
 
   test('un usuario no ve ni puede borrar equipos ajenos (404)', async () => {

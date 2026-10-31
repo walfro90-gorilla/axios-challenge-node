@@ -23,8 +23,12 @@ const withMembers = {
   ],
 };
 
+// Los nombres de la PokeAPI son slugs; con otros caracteres responde 403 y el
+// servicio lo reportaría como 502 (ver ADR-0016).
+const POKEMON_SLUG = /^[a-z0-9-]+$/i;
+
 function isValidPokemonRef(value) {
-  if (typeof value === 'string') return value.trim().length > 0;
+  if (typeof value === 'string') return POKEMON_SLUG.test(value.trim());
   return Number.isInteger(value) && value > 0;
 }
 
