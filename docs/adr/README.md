@@ -27,3 +27,4 @@ Los **problemas encontrados** al implementar estas decisiones (causa, solución 
 | [0013](./0013-estilos-globales-css-propio.md) | Estilos con CSS propio, sin dependencias | Aceptado (ampliado por 0015) |
 | [0014](./0014-foto-y-tipos-en-miembros-de-equipo.md) | Guardar foto y tipos en los miembros de equipo | Aceptado |
 | [0015](./0015-rediseno-favoritos-y-equipos.md) | Rediseño de Favoritos y Equipos (corazón y pokéball) | Aceptado |
+| [0016](./0016-errores-de-cliente-nunca-son-5xx.md) | Los errores de entrada del cliente nunca son 5xx | Aceptado |
