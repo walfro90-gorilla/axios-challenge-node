@@ -151,7 +151,7 @@ export function MyFavorites({ onExplore }: { onExplore: () => void }) {
         <div>
           <h1>Mis favoritos</h1>
           <p className="muted lead">
-            {list ? `${list.length} ${list.length === 1 ? 'pokémon' : 'pokémon'}` : 'Cargando…'}
+            {list ? `${list.length} pokémon` : 'Cargando…'}
           </p>
         </div>
         <button onClick={logout}>Salir</button>
