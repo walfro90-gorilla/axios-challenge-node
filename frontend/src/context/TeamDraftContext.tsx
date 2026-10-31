@@ -9,6 +9,8 @@ interface TeamDraftState {
   has: (id: number) => boolean;
   add: (pokemon: PokemonRef) => void;
   remove: (id: number) => void;
+  /** Agrega o quita (si ya está) un pokémon del borrador. */
+  toggle: (pokemon: PokemonRef) => void;
   clear: () => void;
 }
 
@@ -32,6 +34,13 @@ export function TeamDraftProvider({ children }: { children: ReactNode }) {
           : [...current, pokemon],
       ),
     remove: (id) => setDraft((current) => current.filter((p) => p.id !== id)),
+    toggle: (pokemon) =>
+      setDraft((current) => {
+        if (current.some((p) => p.id === pokemon.id)) {
+          return current.filter((p) => p.id !== pokemon.id);
+        }
+        return current.length >= MAX_TEAM_MEMBERS ? current : [...current, pokemon];
+      }),
     clear: () => setDraft([]),
   };
 
