@@ -32,6 +32,7 @@ Restricciones verificadas:
 
 ### Cambio mínimo en `client.ts`
 - `api.get` acepta un segundo parámetro opcional `RequestInit` para pasar el `signal` del `AbortController`. Es retrocompatible: las llamadas existentes no cambian.
+- Los errores se lanzan como `ApiError extends Error` con `status`, para distinguir un `404` (pokémon inexistente, que se cachea) de otros fallos (red, `401`), que no se cachean, sin depender del texto del mensaje. Sigue siendo un `Error`, así que `Favorites.tsx` y `Login.tsx` no cambian.
 
 ## Alternativas consideradas
 
