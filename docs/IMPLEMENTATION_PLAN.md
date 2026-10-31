@@ -189,6 +189,18 @@ Si hay correcciones: `fix(teams): …`, una por hallazgo.
 
 ---
 
+## Fase 8: mejora posterior a la entrega (frontend)
+
+No estaba en el plan original (el ADR-0007 dejaba el frontend fuera). Se agregó a pedido, tras abrir el PR:
+
+1. **Pantalla de Equipos con búsqueda debounced por nombre exacto** (ADR-0009). Verificada E2E contando peticiones: 4 frente a 32 sin debounce.
+2. **Revisión manual en el navegador:** cada pausa a media palabra generaba un 404 en consola, y la premisa del ADR-0009 resultó falsa (el catálogo sí se puede paginar sin tocar el backend).
+3. **Autocompletado local con índice de nombres** (ADR-0010) y mejoras de UI: pestaña activa, explicar "Crear equipo", Enter/↑/↓/Esc, espaciado y favicon. Verificado E2E en 21 pasos: 0 peticiones por tecla y 0 errores de consola.
+
+Sin cambios en `Favorites.tsx`, `client.ts` ni `pokeapi.service.js`.
+
+---
+
 ## Mapa de trazabilidad
 
 | Requisito (`CHALLENGE.md`) | ADR | Fase | Test |
@@ -204,6 +216,7 @@ Si hay correcciones: `fix(teams): …`, una por hallazgo.
 | Validación de entradas robusta (rúbrica) | 0003, 0008 | 2–3 | 5, 5b |
 | `AI_USAGE.md` completo | — | 7 | — |
 | Conventional Commits en rama `feat/teams-module` | — | todas | — |
+| Bonus: pantalla de Equipos | 0009, 0010 | 8 | E2E manual (21 pasos) |
 
 ## Riesgos y mitigaciones
 
