@@ -77,9 +77,10 @@ li {
 
 /* --- Utilidades --- */
 
+/* 640px de contenido + 16px de padding por lado: alinea con el layout inline de Favoritos. */
 .page {
-  max-width: 640px;
-  margin: 32px auto;
+  max-width: 672px;
+  margin: 40px auto;
   padding: 0 16px;
 }
 
@@ -125,7 +126,7 @@ li {
 }
 
 .tabs-inner {
-  max-width: 640px;
+  max-width: 672px;
   margin: 0 auto;
   padding: 0 16px;
   display: flex;
@@ -166,7 +167,7 @@ li {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 12px;
   padding: 0;
   list-style: none;
@@ -215,6 +216,8 @@ li {
 }
 
 .poke-actions {
+  margin-top: auto;
+  padding-top: 4px;
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
