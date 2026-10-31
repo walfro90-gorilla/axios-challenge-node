@@ -49,9 +49,31 @@ function Shell() {
 }
 
 export function App() {
-  const { token } = useAuth();
+  const { token, checking, sessionError, refreshSession } = useAuth();
 
   // Ruteo mínimo por estado de sesión (sin router para mantenerlo simple).
+  if (checking) {
+    return (
+      <div className="page">
+        <p className="muted">Comprobando sesión…</p>
+      </div>
+    );
+  }
+  // No se pudo comprobar la sesión (backend caído o sin red): se avisa en vez
+  // de dejar la pantalla en blanco (ver H-32).
+  if (sessionError) {
+    return (
+      <div className="page">
+        <div className="card empty-state">
+          <h1>Sin conexión con el servidor</h1>
+          <p className="error">{sessionError}</p>
+          <button className="btn-primary" onClick={refreshSession}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (!token) return <Login />;
 
   return (
