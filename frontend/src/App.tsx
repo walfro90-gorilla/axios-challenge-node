@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { TeamTray } from './components/team';
 import { useAuth } from './context/AuthContext';
-import { TeamDraftProvider } from './context/TeamDraftContext';
+import { TeamDraftProvider, useTeamDraft } from './context/TeamDraftContext';
 import { Login } from './pages/Login';
-import { Favorites } from './pages/Favorites';
+import { MyFavorites } from './pages/MyFavorites';
 import { Pokedex } from './pages/Pokedex';
 import { Teams } from './pages/Teams';
 
@@ -14,15 +15,13 @@ const TABS: { view: View; label: string }[] = [
   { view: 'teams', label: 'Equipos' },
 ];
 
-export function App() {
-  const { token } = useAuth();
+function Shell() {
   const [view, setView] = useState<View>('favorites');
-
-  // Ruteo mínimo por estado de sesión (sin router para mantenerlo simple).
-  if (!token) return <Login />;
+  const { draft } = useTeamDraft();
+  const showTray = view !== 'teams' && draft.length > 0;
 
   return (
-    <TeamDraftProvider>
+    <div className={showTray ? 'with-tray' : undefined}>
       <nav className="tabs">
         <div className="tabs-inner">
           {TABS.map((tab) => (
@@ -33,13 +32,31 @@ export function App() {
               aria-current={tab.view === view ? 'page' : undefined}
             >
               {tab.label}
+              {tab.view === 'teams' && draft.length > 0 && (
+                <span className="tab-count">{draft.length}</span>
+              )}
             </button>
           ))}
         </div>
       </nav>
-      {view === 'pokedex' && <Pokedex onGoToTeams={() => setView('teams')} />}
-      {view === 'favorites' && <Favorites />}
-      {view === 'teams' && <Teams />}
+      {view === 'pokedex' && <Pokedex />}
+      {/* La pantalla de referencia Favorites.tsx se conserva sin cambios (ver ADR-0015). */}
+      {view === 'favorites' && <MyFavorites onExplore={() => setView('pokedex')} />}
+      {view === 'teams' && <Teams onExplore={() => setView('pokedex')} />}
+      {showTray && <TeamTray onOpenTeams={() => setView('teams')} />}
+    </div>
+  );
+}
+
+export function App() {
+  const { token } = useAuth();
+
+  // Ruteo mínimo por estado de sesión (sin router para mantenerlo simple).
+  if (!token) return <Login />;
+
+  return (
+    <TeamDraftProvider>
+      <Shell />
     </TeamDraftProvider>
   );
 }
