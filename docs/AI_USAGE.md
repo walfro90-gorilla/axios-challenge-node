@@ -22,6 +22,7 @@ Trabajé en modo **"decisiones primero, código después"**, con puntos de contr
 5. **Implementación por fases** con commits convencionales, tests y pruebas con `curl` contra la PokeAPI real.
 6. **Revisión independiente** por un subagente, cuyos hallazgos se clasificaron en corregir / documentar / descartar.
 7. **Mejora posterior a la entrega:** pedí una pantalla de Equipos con búsqueda **debounced** (que no llame a la API en cada tecla). Primero se registró como ADR-0009 y después se verificó con un navegador headless que **cuenta las peticiones**.
+8. **Revisión manual en el navegador:** al probarla yo mismo con DevTools vi errores en la consola. Con esa captura le pedí a la IA revisar y mejorar, y de ahí salió el ADR-0010 (autocompletado local) más 5 mejoras de UI que elegí.
 
 ## 3. Prompts clave
 
@@ -63,6 +64,13 @@ quiero agregar mejoras, como debounce; no estar llamando la api cada que se busc
 ```
 **Para qué lo usé / resultado:** la IA revisó primero el frontend y me hizo notar que **no existía ningún buscador** (Favoritos carga una lista fija de 20) y que la PokeAPI **no busca por texto parcial**. Me presentó opciones y elegí: pantalla de Equipos (bonus, sin tocar Favoritos) + búsqueda por nombre exacto con debounce de 400 ms, cancelación con `AbortController` y caché de resultados (incluidos los 404). Verificación E2E: escribiendo como una persona salieron **4 peticiones** en todo el recorrido; con el debounce desactivado, **32**.
 
+### Prompt 6: revisión con mi captura de DevTools
+```
+[captura de la pantalla de Equipos con DevTools: 404 en /api/pokemon/pika y 6 errores en consola]
+revisa y mejoremos
+```
+**Para qué lo usé / resultado:** la IA reprodujo mi sesión en un navegador headless capturando la consola y explicó los errores: el `favicon.ico` 404 del boilerplate y un 404 por cada pausa a media palabra (Chrome los registra como errores y no se pueden suprimir). También **reconoció que su ADR-0009 partía de una premisa falsa**: el autocompletado sí era posible sin tocar el backend, paginando con `offset` (1351 pokémon en 14 páginas, verificado). Elegí el autocompletado local y 5 mejoras de UI: pestaña activa visible, explicar por qué "Crear equipo" está deshabilitado, Enter para agregar, espaciado y favicon. Resultado verificado E2E (21 pasos): **0 peticiones por tecla**, índice cargado una sola vez y **0 errores de consola**.
+
 ## 4. Qué acepté, rechacé o corregí de la IA
 
 | Sugerencia de la IA | ¿Acepté / rechacé / corregí? | ¿Por qué? |
@@ -75,7 +83,8 @@ quiero agregar mejoras, como debounce; no estar llamando la api cada que se busc
 | Reformatear con Prettier los archivos del boilerplate que no pasaban `--check` | **Rechacé** | Eran avisos previos (se verificó contra `main`). Reformatearlos ensuciaría el diff con cambios ajenos al reto. |
 | Hallazgos del subagente revisor (11) | **Acepté 4 correcciones, documenté 4, descarté 1** (los 2 restantes ya estaban previstos para la última fase) | Correcciones: `DELETE /1.0` borraba el equipo 1 (afinidad de tipos de SQLite), orden inestable, mensaje confuso y tests que no cubrían lo que los ADRs prometían. Documentados: concurrencia SQLite, asimetría de validación, `422`/`502` no determinista. |
 | Configurar `busyTimeout` para arreglar `SQLITE_BUSY` con `POST` concurrentes | **Rechacé tras probarlo** | Se aplicó en forma temporal, se midió (seguía habiendo 7–24 errores de cada 30) y se revirtió. Quedó como limitación documentada en el ADR-0006. |
-| Autocompletado parcial ("pik" → pikachu) para el buscador | **Rechacé** | Exigía cambiar el límite de 100 de `pokeapi.service.js` o reimplementar la PokeAPI, que el reto penaliza. Elegí búsqueda exacta con debounce (ADR-0009). |
+| Autocompletado parcial ("pik" → pikachu) para el buscador | **Rechacé primero, luego lo adopté** | La IA dijo que exigía cambiar `pokeapi.service.js`, así que elegí búsqueda exacta (ADR-0009). Al probarla en el navegador vi 404 en consola; la IA revisó y reconoció que la premisa era falsa (el endpoint acepta `offset`). Se adoptó el autocompletado local (ADR-0010). |
+| Mantener los cambios de `client.ts` (`signal`, `ApiError`) tras pasar a búsqueda local | **Rechacé** | Ya no se usaban. Se revirtieron para tocar menos código compartido. |
 | Librería de debounce o React Router | **Rechacé** | Dependencias nuevas para ~10 líneas y dos pantallas. |
 | Confiar en que el debounce funcionaba porque compila | **Corregí** | Se exigió una prueba E2E que cuenta peticiones, y se comprobó que **falla** con el debounce desactivado (32 peticiones frente a 4). |
 | Usar `retry` de Sequelize ante `SQLITE_BUSY` (sugerencia del subagente) | **Pospuse** | Toca `config/database.js` (compartido) y no se verificó. Queda en "qué haría con más tiempo". |
@@ -93,6 +102,8 @@ Lo que yo dirigí o decidí (la IA propuso opciones y redactó, pero no decidió
 - **Entrega:** trabajar sobre un **fork propio** (`walfro90-gorilla/axios-challenge-node`) en la rama `feat/teams-module`.
 - **Herramienta:** usar sólo Claude Opus y documentar honestamente su uso.
 - **Debounce en la búsqueda:** la mejora fue idea mía. Elegí la pantalla de Equipos y la búsqueda por nombre exacto entre las opciones presentadas.
+- **Probar en el navegador con DevTools** y llevarle a la IA la evidencia (captura). Eso destapó los 404 y la premisa falsa del ADR-0009.
+- **Autocompletado local** (ADR-0010) y las mejoras de UI: pestaña activa clara, explicar "Crear equipo", Enter para agregar, espaciado y quitar el 404 del favicon.
 
 Las decisiones que venían dictadas por el reto (máx. 6 → `422`, especie inexistente → `422` reutilizando `pokeapi.service.js`, ownership → `404`) quedaron registradas en los ADRs 0003–0005.
 
@@ -102,6 +113,8 @@ Las decisiones que venían dictadas por el reto (máx. 6 → `422`, especie inex
 - **Afirmación falsa sobre la cobertura de tests (plan).** El plan decía que un test "cubría la cascada de forma indirecta". El subagente revisor señaló que no: el test pasaría aunque la cascada no existiera. Se agregó una verificación explícita (`TeamMember.count() === 0`).
 - **Suposición de que no habría problemas de concurrencia.** El ADR-0006 sólo se preocupaba de que la transacción fuera "corta". La revisión demostró que con `POST` simultáneos SQLite responde `500 SQLITE_BUSY` (13 de 20 en una prueba). No estaba previsto.
 - **Efecto colateral al editar con el servidor en `--watch`.** Al guardar los modelos en varios pasos, el servidor de desarrollo se reinició a mitad de camino y creó las tablas **sin** sus claves foráneas (`sync()` no altera tablas ya existentes). La IA lo detectó al verificar el esquema, borró las tablas (vacías) y se recrearon bien. El riesgo estaba anotado en el plan, pero igual ocurrió.
+- **Premisa falsa en el ADR-0009.** La IA afirmó que el autocompletado requería modificar `pokeapi.service.js` por su límite de 100. El límite es **por página** y el endpoint acepta `offset`: el catálogo completo se trae en 14 páginas sin tocar el backend. No lo detectó ninguna revisión automática: **lo destapé yo al probar en el navegador** y ver los 404 que provocaba la búsqueda exacta.
+- **Un selector incorrecto en su propia prueba E2E.** Dos pasos fallaron porque el selector tomaba los botones "quitar" en lugar de las sugerencias. La IA lo diagnosticó como error de la prueba (no de la app) leyendo el texto capturado, y lo corrigió.
 - **Un intento de arreglo que no funcionó** (`busyTimeout`). Lo valioso fue que la IA midió antes de dar el arreglo por bueno y lo revirtió.
 
 Lección: la IA escribió afirmaciones plausibles pero falsas en su propia documentación. **Pedirle que verificara contra el código y que pasara por una revisión independiente fue lo que las sacó a la luz.**
@@ -110,7 +123,8 @@ Lección: la IA escribió afirmaciones plausibles pero falsas en su propia docum
 
 - Resolver la concurrencia de escritura en SQLite (`retry` ante `SQLITE_BUSY` o modo WAL); en producción, Postgres.
 - `GET /api/teams/:id` y `PATCH /api/teams/:id`.
-- Tests automatizados de frontend (Vitest + Testing Library) para el hook de debounce y la pantalla de Equipos; hoy se verifica con `tsc` y una prueba E2E manual.
+- Tests automatizados de frontend (Vitest + Testing Library) para el hook de debounce, `searchPokemon` y la pantalla de Equipos, y versionar la prueba E2E (Playwright). Hoy se verifica con `tsc` y una prueba E2E manual fuera del repo.
+- Endpoint de búsqueda en el backend (`GET /api/pokemon/search?q=`) si el catálogo creciera, y sprites en las sugerencias.
 - Validar especies reales (`/pokemon-species/`) y normalizar ids como `025`. Implica evolucionar `pokeapi.service.js` (beneficiaría también a Favoritos).
 - Reportar todas las especies inválidas a la vez (`Promise.allSettled`) con una precedencia clara entre `422` y `502`.
 - Reintentos ante `429`/`5xx` de la PokeAPI.
