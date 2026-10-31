@@ -23,3 +23,5 @@ Cada ADR sigue el formato de Michael Nygard: **Contexto → Decisión → Consec
 | [0011](./0011-listado-de-pokemon-con-detalles.md) | Listado paginado de pokémon con detalles (`?details=true`) | Aceptado |
 | [0012](./0012-pestana-pokedex-paginada.md) | Pestaña Pokédex paginada con borrador de equipo compartido | Aceptado |
 | [0013](./0013-estilos-globales-css-propio.md) | Estilos con CSS propio, sin dependencias | Aceptado |
+| [0014](./0014-foto-y-tipos-en-miembros-de-equipo.md) | Guardar foto y tipos en los miembros de equipo | Aceptado |
+| [0015](./0015-rediseno-favoritos-y-equipos.md) | Rediseño de Favoritos y Equipos (corazón y pokéball) | Aceptado |
