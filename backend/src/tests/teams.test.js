@@ -8,9 +8,9 @@ const app = createApp();
 const POKEMONS = [
   { id: 1, name: 'bulbasaur' },
   { id: 4, name: 'charmander' },
-  { id: 6, name: 'charizard' },
+  { id: 6, name: 'charizard', sprite: 'char.png', types: ['fire', 'flying'] },
   { id: 7, name: 'squirtle' },
-  { id: 25, name: 'pikachu' },
+  { id: 25, name: 'pikachu', sprite: 'pika.png', types: ['electric'] },
   { id: 39, name: 'jigglypuff' },
   { id: 143, name: 'snorlax' },
 ];
@@ -51,6 +51,23 @@ describe('Equipos (Teams)', () => {
     expect(res.body.members.map((m) => [m.pokemonId, m.pokemonName])).toEqual([
       [25, 'pikachu'],
       [6, 'charizard'],
+    ]);
+  });
+
+  test('guarda y devuelve la foto y los tipos de cada miembro', async () => {
+    const token = await authToken();
+    await createTeam(token, { name: 'Con fotos', pokemon: ['pikachu', 'charizard', 'squirtle'] });
+
+    const list = await listTeams(token);
+    const members = list.body.data[0].members.map(({ pokemonName, sprite, types }) => ({
+      pokemonName,
+      sprite,
+      types,
+    }));
+    expect(members).toEqual([
+      { pokemonName: 'pikachu', sprite: 'pika.png', types: ['electric'] },
+      { pokemonName: 'charizard', sprite: 'char.png', types: ['fire', 'flying'] },
+      { pokemonName: 'squirtle', sprite: null, types: [] },
     ]);
   });
 

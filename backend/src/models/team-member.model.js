@@ -25,6 +25,16 @@ export function initTeamMemberModel(sequelize) {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      // Foto y tipos guardados al crear el equipo (ver ADR-0014).
+      sprite: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      types: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
+      },
     },
     {
       sequelize,

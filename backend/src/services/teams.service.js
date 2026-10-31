@@ -86,7 +86,13 @@ export async function createTeam(userId, body) {
   const team = await sequelize.transaction(async (transaction) => {
     const created = await Team.create({ name, userId }, { transaction });
     await TeamMember.bulkCreate(
-      species.map((s) => ({ teamId: created.id, pokemonId: s.id, pokemonName: s.name })),
+      species.map((s) => ({
+        teamId: created.id,
+        pokemonId: s.id,
+        pokemonName: s.name,
+        sprite: s.sprite,
+        types: s.types,
+      })),
       { transaction },
     );
     return created;
