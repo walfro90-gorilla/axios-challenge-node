@@ -1,6 +1,6 @@
 # ADR-0013: Estilos con CSS propio, sin dependencias
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado. Ampliado por [ADR-0015](./0015-rediseno-favoritos-y-equipos.md). El tamaño de los sprites lo fija el componente, no el CSS (hallazgo [H-25](../FINDINGS.md#h-25--css-que-anulaba-el-tamaño-de-los-sprites-))
 - **Fecha:** 2026-10-30
 
 ## Contexto

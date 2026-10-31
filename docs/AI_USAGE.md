@@ -135,6 +135,8 @@ Las decisiones que venían dictadas por el reto (máx. 6 → `422`, especie inex
 
 ## 6. ¿Dónde te falló o te "alucinó" la IA?
 
+> El registro completo de hallazgos (27, con causa, solución y verificación) está en [`FINDINGS.md`](./FINDINGS.md). Aquí sólo los relacionados con errores de la IA.
+
 - **Afirmación falsa sobre la caché (ADR-0005).** La IA aseguró que la caché evitaba consultas repetidas dentro de un equipo; con `Promise.all` no es así. Lo detectó la propia IA, pero **sólo porque le pedí la revisión de consistencia**.
 - **Afirmación falsa sobre la cobertura de tests (plan).** El plan decía que un test "cubría la cascada de forma indirecta". El subagente revisor señaló que no: el test pasaría aunque la cascada no existiera. Se agregó una verificación explícita (`TeamMember.count() === 0`).
 - **Suposición de que no habría problemas de concurrencia.** El ADR-0006 sólo se preocupaba de que la transacción fuera "corta". La revisión demostró que con `POST` simultáneos SQLite responde `500 SQLITE_BUSY` (13 de 20 en una prueba). No estaba previsto.
@@ -150,6 +152,9 @@ Las decisiones que venían dictadas por el reto (máx. 6 → `422`, especie inex
 Lección: la IA escribió afirmaciones plausibles pero falsas en su propia documentación. **Pedirle que verificara contra el código y que pasara por una revisión independiente fue lo que las sacó a la luz.**
 
 ## 7. ¿Qué harías distinto con más tiempo?
+
+- Versionar las pruebas E2E en el repo (hoy viven fuera, en `/tmp`) y correrlas en CI.
+- Resolver el aviso pendiente del panel *Issues* de DevTools (H-27).
 
 - Resolver la concurrencia de escritura en SQLite (`retry` ante `SQLITE_BUSY` o modo WAL); en producción, Postgres.
 - `GET /api/teams/:id` y `PATCH /api/teams/:id`.

@@ -1,6 +1,6 @@
 # ADR-0012: Pestaña Pokédex paginada con borrador de equipo compartido
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado. Ampliado por [ADR-0015](./0015-rediseno-favoritos-y-equipos.md): la tarjeta "Equipo en armado" pasa a ser una bandeja inferior y las acciones a ♥ / pokéball. La caché por página guarda la promesa en curso (hallazgo [H-20](../FINDINGS.md#h-20--petición-duplicada-por-página-en-desarrollo-))
 - **Fecha:** 2026-10-30
 
 ## Contexto

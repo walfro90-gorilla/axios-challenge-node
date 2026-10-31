@@ -1,6 +1,6 @@
 # ADR-0007: Alcance — qué entra y qué queda fuera
 
-- **Estado:** Aceptado. Parcialmente reemplazado por [ADR-0009](./0009-pantalla-de-equipos-con-busqueda-debounced.md) (pantalla de Equipos)
+- **Estado:** Aceptado. Alcance ampliado tras la entrega por los ADRs [0009](./0009-pantalla-de-equipos-con-busqueda-debounced.md)–[0015](./0015-rediseno-favoritos-y-equipos.md) (frontend, paginación y rediseño, a pedido)
 - **Fecha:** 2026-10-30
 
 ## Contexto

@@ -1,6 +1,6 @@
 # Plan de implementación — Módulo Teams
 
-Basado en los ADRs de [`docs/adr/`](./adr/README.md). Cada paso indica qué ADR lo respalda, qué archivos toca y cómo se verifica que está terminado.
+Basado en los ADRs de [`docs/adr/`](./adr/README.md). Los problemas encontrados en cada fase, con su solución, están en [`FINDINGS.md`](./FINDINGS.md). Cada paso indica qué ADR lo respalda, qué archivos toca y cómo se verifica que está terminado.
 
 ## Estrategia de ejecución (¿agéntico o no?)
 

@@ -1,6 +1,6 @@
 # ADR-0001: Modelo de datos `Team` + `TeamMember` en tablas separadas
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado. Ampliado por [ADR-0014](./0014-foto-y-tipos-en-miembros-de-equipo.md) (`sprite` y `types` en `TeamMember`)
 - **Fecha:** 2026-10-30
 
 ## Contexto
