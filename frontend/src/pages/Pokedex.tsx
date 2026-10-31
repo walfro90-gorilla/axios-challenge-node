@@ -22,8 +22,21 @@ interface Favorite {
 const PAGE_SIZE = 20;
 
 // A nivel de módulo para conservar página y caché al cambiar de pestaña.
-const pageCache = new Map<number, PokedexPage>();
+// Se cachea la promesa: pedidos simultáneos de la misma página comparten una petición.
+const pageCache = new Map<number, Promise<PokedexPage>>();
 let lastPage = 0;
+
+function loadPage(page: number): Promise<PokedexPage> {
+  let pending = pageCache.get(page);
+  if (!pending) {
+    pending = api.get<PokedexPage>(
+      `/pokemon?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}&details=true`,
+    );
+    pageCache.set(page, pending);
+    pending.catch(() => pageCache.delete(page)); // permite reintentar si falla
+  }
+  return pending;
+}
 
 /**
  * Catálogo paginado con foto y tipos (ver ADR-0011 y ADR-0012). Permite
@@ -48,20 +61,11 @@ export function Pokedex({ onGoToTeams }: { onGoToTeams: () => void }) {
 
   useEffect(() => {
     lastPage = page;
-    const cached = pageCache.get(page);
-    if (cached) {
-      setData(cached);
-      setLoading(false);
-      return;
-    }
-
     let cancelled = false;
     setLoading(true);
     setError(null);
-    api
-      .get<PokedexPage>(`/pokemon?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}&details=true`)
+    loadPage(page)
       .then((res) => {
-        pageCache.set(page, res);
         if (!cancelled) setData(res);
       })
       .catch((err) => {
