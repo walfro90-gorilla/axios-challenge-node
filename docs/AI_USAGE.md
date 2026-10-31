@@ -24,6 +24,7 @@ Trabajé en modo **"decisiones primero, código después"**, con puntos de contr
 7. **Mejora posterior a la entrega:** pedí una pantalla de Equipos con búsqueda **debounced** (que no llame a la API en cada tecla). Primero se registró como ADR-0009 y después se verificó con un navegador headless que **cuenta las peticiones**.
 8. **Revisión manual en el navegador:** al probarla yo mismo con DevTools vi errores en la consola. Con esa captura le pedí a la IA revisar y mejorar, y de ahí salió el ADR-0010 (autocompletado local) más 5 mejoras de UI que elegí.
 9. **Pedido de revisión:** me pidieron agregar paginación y que se viera bien. Con la IA definí el alcance (ADRs 0011–0013), se implementó con E2E y se pulió a partir de capturas de pantalla.
+10. **Rediseño de Favoritos y Equipos:** pedí corazón para favorito, pokéball para equipo y una mejora considerable de la UI/UX. Decidí las dos disyuntivas (página nueva de favoritos y guardar fotos en los miembros) y la IA implementó, probó (36 pasos E2E) y pulió a partir de capturas.
 
 ## 3. Prompts clave
 
@@ -79,6 +80,13 @@ podemos agregar paginación y agregar más datos de la API, fotos, tipo? o qué 
 ```
 **Para qué lo usé / resultado:** la IA revisó qué datos ya exponía el servicio (foto y tipos sí; estadísticas no, porque exigían modificar `pokeapi.service.js`) y me planteó opciones con sus trade-offs: dónde paginar sin romper la regla de no tocar Favoritos, cómo evitar 21 peticiones por página y CSS propio frente a Tailwind. Elegí: pestaña Pokédex nueva, foto y tipos agregados en el backend (`details=true`), CSS propio y el mismo PR.
 
+### Prompt 8: corazón, pokéball y rediseño
+```
+mejora la sección favorito y equipo. Mejora la UI/UX, agrega un corazón en favorito y una pokéball
+en equipo. Y en sí mejóralo considerablemente
+```
+**Para qué lo usé / resultado:** antes de diseñar, la IA me planteó dos disyuntivas: (1) mejorar Favoritos chocaba con la regla de no tocar ese módulo, y (2) para mostrar fotos en los equipos había que guardarlas o pedirlas en cada carga. Elegí una página nueva de favoritos (`Favorites.tsx` intacto) y guardar foto y tipos en los miembros. La IA detectó además que yo tenía un equipo y favoritos propios en la base local: **en lugar de recrear las tablas agregó las columnas con `ALTER TABLE`** (con respaldo previo) y cambió las pruebas E2E para usar un usuario nuevo en cada ejecución.
+
 ## 4. Qué acepté, rechacé o corregí de la IA
 
 | Sugerencia de la IA | ¿Acepté / rechacé / corregí? | ¿Por qué? |
@@ -100,6 +108,9 @@ podemos agregar paginación y agregar más datos de la API, fotos, tipo? o qué 
 | Tailwind o una librería de componentes | **Rechacé** | Dependencias y configuración para tres pantallas. CSS propio (ADR-0013). |
 | Estadísticas, altura y peso | **Pospuse** | Exigen modificar `pokeapi.service.js`. |
 | Primera versión visual de la Pokédex (4 columnas) | **Corregí** | Las capturas mostraron botones y tipos apilados, tarjetas de distinta altura y Favoritos desalineado. Se pasó a 3 columnas y se alineó el layout sólo con CSS. |
+| Recrear las tablas de equipos para agregar `sprite` y `types` | **Rechacé** | Borraba un equipo que yo había creado a mano. Se agregaron las columnas con `ALTER TABLE` y un fallback en el frontend para filas sin foto. |
+| Pruebas E2E con el usuario demo | **Corregí** | Una versión anterior borraba favoritos del demo (ivysaur) al limpiar. Ahora cada ejecución registra un usuario nuevo. |
+| Primera versión del rediseño | **Corregí** | Las capturas mostraron sprites gigantes en la bandeja (el CSS fijaba 96 px y anulaba el tamaño pedido), la 6ª casilla desbordada, espaciado pegado y "Charmande/r" partido. Se corrigió y se volvió a verificar. |
 | Usar `retry` de Sequelize ante `SQLITE_BUSY` (sugerencia del subagente) | **Pospuse** | Toca `config/database.js` (compartido) y no se verificó. Queda en "qué haría con más tiempo". |
 
 ## 5. Decisiones de diseño que tomaste tú
@@ -116,6 +127,7 @@ Lo que yo dirigí o decidí (la IA propuso opciones y redactó, pero no decidió
 - **Herramienta:** usar sólo Claude Opus y documentar honestamente su uso.
 - **Debounce en la búsqueda:** la mejora fue idea mía. Elegí la pantalla de Equipos y la búsqueda por nombre exacto entre las opciones presentadas.
 - **Probar en el navegador con DevTools** y llevarle a la IA la evidencia (captura). Eso destapó los 404 y la premisa falsa del ADR-0009.
+- **Corazón y pokéball:** pedí estos íconos y la mejora de Favoritos y Equipos; decidí página nueva de favoritos (sin tocar `Favorites.tsx`) y guardar foto y tipos en los miembros.
 - **Paginación y diseño:** pestaña Pokédex nueva en lugar de tocar Favoritos, foto y tipos en el catálogo, CSS propio y entregar en el mismo PR.
 - **Autocompletado local** (ADR-0010) y las mejoras de UI: pestaña activa clara, explicar "Crear equipo", Enter para agregar, espaciado y quitar el 404 del favicon.
 
@@ -128,6 +140,8 @@ Las decisiones que venían dictadas por el reto (máx. 6 → `422`, especie inex
 - **Suposición de que no habría problemas de concurrencia.** El ADR-0006 sólo se preocupaba de que la transacción fuera "corta". La revisión demostró que con `POST` simultáneos SQLite responde `500 SQLITE_BUSY` (13 de 20 en una prueba). No estaba previsto.
 - **Efecto colateral al editar con el servidor en `--watch`.** Al guardar los modelos en varios pasos, el servidor de desarrollo se reinició a mitad de camino y creó las tablas **sin** sus claves foráneas (`sync()` no altera tablas ya existentes). La IA lo detectó al verificar el esquema, borró las tablas (vacías) y se recrearon bien. El riesgo estaba anotado en el plan, pero igual ocurrió.
 - **Premisa falsa en el ADR-0009.** La IA afirmó que el autocompletado requería modificar `pokeapi.service.js` por su límite de 100. El límite es **por página** y el endpoint acepta `offset`: el catálogo completo se trae en 14 páginas sin tocar el backend. No lo detectó ninguna revisión automática: **lo destapé yo al probar en el navegador** y ver los 404 que provocaba la búsqueda exacta.
+- **Una prueba E2E que borraba datos reales.** La limpieza de la prueba de la Pokédex quitaba a ivysaur de los favoritos del usuario demo, aunque yo lo había agregado por mi cuenta. La IA lo notó al revisar la base antes del rediseño y pasó todas las pruebas a usuarios nuevos.
+- **CSS que anulaba el tamaño de las imágenes.** `.poke-sprite` fijaba 96 px y anulaba el tamaño pedido por cada componente: la bandeja mostraba sprites gigantes. Se detectó en las capturas, no en las pruebas (que pasaban).
 - **Una prueba E2E que suponía datos que ya no existían.** Daba por hecho que el usuario demo tenía a charizard como favorito; yo lo había quitado al probar. La IA verificó contra la API antes de tocar el código y reescribió la prueba para que no dependiera de datos previos.
 - **Una petición duplicada que sólo se veía en desarrollo.** El modo estricto de React ejecutaba dos veces la carga de cada página. Se detectó porque la prueba contaba peticiones, y se corrigió cacheando la promesa en curso.
 - **Un selector incorrecto en su propia prueba E2E.** Dos pasos fallaron porque el selector tomaba los botones "quitar" en lugar de las sugerencias. La IA lo diagnosticó como error de la prueba (no de la app) leyendo el texto capturado, y lo corrigió.

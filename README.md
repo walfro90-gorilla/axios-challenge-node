@@ -48,6 +48,9 @@ npm run dev               # arranca en http://localhost:5173
 
 Abre http://localhost:5173, inicia sesión con el usuario demo y verás el catálogo de pokémon y tus favoritos. El frontend hace proxy de `/api` hacia el backend (ver `frontend/vite.config.ts`).
 
+> **¿Ya tenías una base local de una versión anterior?** Los miembros de equipo ahora guardan foto y tipos (ADR-0014). Como el proyecto usa `sync()` sin migraciones, ejecuta `npm run seed` para recrear la base, o agrega las columnas a mano:
+> `ALTER TABLE team_members ADD COLUMN sprite VARCHAR(255);` y `ALTER TABLE team_members ADD COLUMN types JSON NOT NULL DEFAULT '[]';`
+
 ### 3. Tests del backend
 
 ```bash

@@ -212,6 +212,19 @@ Sin cambios en `Favorites.tsx`, `client.ts` ni `pokeapi.service.js`.
 
 ---
 
+## Fase 10: rediseño de Favoritos y Equipos (corazón y pokéball)
+
+Pedido: "mejora la sección favorito y equipo, la UI/UX, agrega un corazón en favorito y una pokéball en equipo".
+
+1. **Backend** (ADR-0014): `TeamMember` guarda `sprite` y `types` al crear el equipo. En la base local se agregaron las columnas con `ALTER TABLE` para **no perder el equipo que el usuario había creado**. 1 test nuevo.
+2. **Componentes** (ADR-0015): íconos SVG propios, `PokemonCard`, `TypeBadges`, caché de detalles (`pokemonDetails.ts`), `useFavorites` (optimista con reversión) y `usePokemonDetail`.
+3. **Pantallas:** ♥ y pokéball conmutables en la Pokédex; página nueva `MyFavorites.tsx` (apodo editable, deshacer, estado vacío) en lugar de tocar `Favorites.tsx`; Equipos con 6 casillas, tarjetas con fotos y cobertura de tipos, y confirmación al eliminar; bandeja inferior del equipo en armado.
+4. **Verificación:** 26 tests de backend; E2E del rediseño (36 pasos, con un usuario nuevo por ejecución para no tocar los datos del demo) y regresión del autocompletado (21 pasos); revisión visual con capturas, que llevó a corregir el tamaño de los sprites, el desborde de las casillas, el espaciado y los nombres largos.
+
+Sin cambios en `Favorites.tsx`, `client.ts`, `pokeapi.service.js` ni el módulo de Favoritos del backend.
+
+---
+
 ## Mapa de trazabilidad
 
 | Requisito (`CHALLENGE.md`) | ADR | Fase | Test |
@@ -229,6 +242,7 @@ Sin cambios en `Favorites.tsx`, `client.ts` ni `pokeapi.service.js`.
 | Conventional Commits en rama `feat/teams-module` | — | todas | — |
 | Bonus: pantalla de Equipos | 0009, 0010 | 8 | E2E manual (21 pasos) |
 | Pedido de revisión: paginación y estilo | 0011, 0012, 0013 | 9 | `pokemon.test.js` + E2E manual (23 pasos) |
+| Rediseño: corazón, pokéball, Favoritos y Equipos | 0014, 0015 | 10 | `teams.test.js` + E2E manual (36 pasos) |
 
 ## Riesgos y mitigaciones
 
