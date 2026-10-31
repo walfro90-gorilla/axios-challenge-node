@@ -28,7 +28,7 @@ Todo problema, error o suposición falsa detectado durante el desarrollo: **cóm
 | H-16 | Un 404 en consola por cada pausa al buscar, y favicon 404 | 👀 | ✅ | ADR-0010 · `73b02f3`, `8c8382f` |
 | H-17 | ADR-0009 partía de una premisa falsa | 👀 | ✅ | ADR-0010 |
 | H-18 | Selector incorrecto en una prueba E2E | 🧪 | ✅ | Corrección de la prueba |
-| H-19 | Un commit intermedio dejaba el build roto | 🧠 | ✅ | Commits combinados |
+| H-19 | Un commit intermedio deja el build del frontend roto (`8c8382f`) | 🧠 🧪 | 📄 | Corregido en el commit siguiente; no se reescribe el historial |
 | H-20 | Petición duplicada por página en desarrollo | 🧪 | ✅ | `8b3d0ec` |
 | H-21 | Prueba E2E que suponía favoritos del demo | 🧪 | ✅ | Reescritura de la prueba |
 | H-22 | Tarjetas apretadas y Favoritos desalineado | 👀 | ✅ | `5a334cb` |
@@ -158,8 +158,12 @@ Todo problema, error o suposición falsa detectado durante el desarrollo: **cóm
 ### H-18 · Selector incorrecto en una prueba E2E ✅
 - `ul li button` tomaba los botones "quitar" en lugar de las sugerencias. Diagnosticado leyendo el texto capturado; ahora se usan clases semánticas (`.suggestion`, `.slot-filled`) y atributos `data-pokemon` / `data-team`.
 
-### H-19 · Un commit intermedio dejaba el build roto ✅
-- Revertir `client.ts` antes de reescribir `Teams.tsx` rompía la compilación en ese commit. Se deshizo (`reset --soft`) y se juntaron ambos cambios. Regla: **cada commit debe compilar**.
+### H-19 · Un commit intermedio deja el build del frontend roto (`8c8382f`) 📄
+- **Detección inicial (🧠):** revertir `client.ts` en un commit propio, antes de reescribir `Teams.tsx`, rompía la compilación. Se deshizo con `git reset --soft` para juntar ambos cambios.
+- **Pero la solución fue incompleta (🧪):** el `reset --soft` dejó la reversión de `client.ts` **preparada en el índice**, y el siguiente commit (`8c8382f`, el del favicon) se la llevó sin que se notara. En ese commit `client.ts` ya no exporta `ApiError` y `Teams.tsx` todavía la importa: `tsc` falla. El commit siguiente (`73b02f3`) lo corrige.
+- **Cómo se detectó:** al verificar **commit por commit** (worktree aparte, `tsc` + tests + lint en cada uno) antes de afirmar en el PR que todos compilaban. Todos los demás commits pasan.
+- **Resolución:** no se reescribe el historial. Exigiría un *force-push* que cambia los hashes de 20 commits ya publicados y citados en estos documentos. El código final no está afectado.
+- **Lección:** revisar `git diff --cached --stat` antes de cada commit, sobre todo después de un `reset`, y verificar commit por commit antes de publicar.
 
 ### H-21 · Prueba E2E que suponía favoritos del demo ✅
 - Esperaba que el demo tuviera a charizard; el usuario lo había quitado. Se verificó contra la API antes de tocar código y se reescribió la prueba sin depender de datos previos.

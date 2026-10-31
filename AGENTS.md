@@ -14,7 +14,7 @@ Reto técnico de Axios Mobile: Pokédex con JWT, Favoritos (referencia) y el mó
 3. **Ownership:** toda query de Teams filtra por `req.user.id`; un equipo ajeno responde `404`, no `403` (ADR-0004).
 4. **Errores:** lanzar `HttpError` y usar `asyncHandler`; sin `try/catch` en los controladores.
 5. **Decisiones nuevas → ADR nuevo** en `docs/adr/` (no reescribir los aceptados; agregar "Reemplaza"/"Amplía"). **Problemas encontrados → `docs/FINDINGS.md`.** Uso de IA → `docs/AI_USAGE.md`.
-6. **Conventional Commits.** Cada commit debe compilar y pasar los tests (H-19).
+6. **Conventional Commits.** Cada commit debe compilar y pasar los tests. Revisar `git diff --cached --stat` antes de cada commit, sobre todo tras un `git reset` (H-19: un cambio que quedó preparado rompió `8c8382f`). Antes de publicar, verificar commit por commit en un worktree aparte.
 7. **Push / PR:** sólo cuando el usuario lo apruebe. Siempre `gh pr ... --repo walfro90-gorilla/axios-challenge-node` (H-05).
 
 ## Comandos
