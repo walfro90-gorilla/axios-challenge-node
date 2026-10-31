@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { api } from '../api/client';
 import { loadPokemonIndex, searchPokemon, type PokemonRef } from '../api/pokemonIndex';
 import { useAuth } from '../context/AuthContext';
+import { MAX_TEAM_MEMBERS, useTeamDraft } from '../context/TeamDraftContext';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
 interface TeamMember {
@@ -16,15 +17,16 @@ interface Team {
   members: TeamMember[];
 }
 
-const MAX_MEMBERS = 6;
 const FILTER_DEBOUNCE_MS = 150;
 
 /**
  * Pantalla de Equipos: autocompletado local sobre el índice de pokémon
  * (ver ADR-0010), arma un equipo de hasta 6 y lo guarda en /api/teams.
+ * El borrador se comparte con la Pokédex (ADR-0012).
  */
 export function Teams() {
   const { logout } = useAuth();
+  const draft = useTeamDraft();
   const [teams, setTeams] = useState<Team[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +38,6 @@ export function Teams() {
   const [highlighted, setHighlighted] = useState(0);
 
   const [teamName, setTeamName] = useState('');
-  const [draft, setDraft] = useState<PokemonRef[]>([]);
 
   async function loadTeams() {
     const res = await api.get<{ data: Team[] }>('/teams');
@@ -62,17 +63,10 @@ export function Teams() {
 
   useEffect(() => setHighlighted(0), [debouncedTerm]);
 
-  const draftIsFull = draft.length >= MAX_MEMBERS;
-  const inDraft = (p: PokemonRef) => draft.some((d) => d.id === p.id);
-
   function addToDraft(pokemon: PokemonRef) {
-    if (draftIsFull || inDraft(pokemon)) return;
-    setDraft([...draft, pokemon]);
+    if (draft.isFull || draft.has(pokemon.id)) return;
+    draft.add(pokemon);
     setTerm('');
-  }
-
-  function removeFromDraft(id: number) {
-    setDraft(draft.filter((p) => p.id !== id));
   }
 
   function onSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -84,7 +78,7 @@ export function Teams() {
       // Si el debounce aún no se aplicó, se busca con el texto actual.
       const settled = term === debouncedTerm;
       const current = settled ? suggestions : index ? searchPokemon(index, term) : [];
-      const pick = settled ? current[highlighted] : current.find((p) => !inDraft(p));
+      const pick = settled ? current[highlighted] : current.find((p) => !draft.has(p.id));
       if (pick) addToDraft(pick);
     } else if (e.key === 'Escape') {
       setTerm('');
@@ -93,15 +87,15 @@ export function Teams() {
 
   const missing = [
     ...(teamName.trim() ? [] : ['nombre del equipo']),
-    ...(draft.length > 0 ? [] : ['al menos 1 pokémon']),
+    ...(draft.draft.length > 0 ? [] : ['al menos 1 pokémon']),
   ];
 
   async function createTeam() {
     try {
       setError(null);
-      await api.post('/teams', { name: teamName, pokemon: draft.map((p) => p.name) });
+      await api.post('/teams', { name: teamName, pokemon: draft.draft.map((p) => p.name) });
       setTeamName('');
-      setDraft([]);
+      draft.clear();
       await loadTeams();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al crear el equipo');
@@ -119,84 +113,97 @@ export function Teams() {
   }
 
   return (
-    <div style={{ maxWidth: 640, margin: '40px auto', fontFamily: 'system-ui' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="page">
+      <div className="page-header">
         <h1>Pokédex — Equipos</h1>
         <button onClick={logout}>Salir</button>
       </div>
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
+      {error && <p className="error">{error}</p>}
 
-      <h2>Nuevo equipo ({draft.length}/{MAX_MEMBERS})</h2>
-      <input
-        placeholder="Nombre del equipo"
-        value={teamName}
-        onChange={(e) => setTeamName(e.target.value)}
-        maxLength={50}
-      />
-      <ul>
-        {draft.map((p) => (
-          <li key={p.id}>
-            #{p.id} {p.name} <button onClick={() => removeFromDraft(p.id)}>quitar</button>
-          </li>
-        ))}
-      </ul>
-
-      <input
-        placeholder="Buscar pokémon por nombre o número (ej. pika, 25)"
-        value={term}
-        onChange={(e) => setTerm(e.target.value)}
-        onKeyDown={onSearchKeyDown}
-        disabled={draftIsFull}
-        style={{ width: '100%' }}
-      />
-      <small style={{ color: '#666' }}>
-        {draftIsFull
-          ? 'El equipo está completo.'
-          : index
-            ? '↑/↓ para elegir, Enter para agregar.'
-            : indexError
-              ? null
-              : 'Cargando catálogo…'}
-      </small>
-      {indexError && (
-        <p style={{ color: 'crimson' }}>
-          {indexError} <button onClick={loadIndex}>Reintentar</button>
-        </p>
-      )}
-
-      {!draftIsFull && suggestions.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0', border: '1px solid #ddd' }}>
-          {suggestions.map((p, i) => (
-            <li key={p.id} style={{ background: i === highlighted ? '#eef' : undefined }}>
-              <button
-                onClick={() => addToDraft(p)}
-                onMouseEnter={() => setHighlighted(i)}
-                disabled={inDraft(p)}
-                style={{ all: 'unset', display: 'block', width: '100%', padding: '4px 8px', cursor: 'pointer' }}
-              >
-                #{p.id} {p.name} {inDraft(p) && <small style={{ color: '#666' }}>(ya en el equipo)</small>}
+      <section className="card">
+        <h2 style={{ marginTop: 0 }}>
+          Nuevo equipo ({draft.draft.length}/{MAX_TEAM_MEMBERS})
+        </h2>
+        <input
+          placeholder="Nombre del equipo"
+          value={teamName}
+          onChange={(e) => setTeamName(e.target.value)}
+          maxLength={50}
+        />
+        <ul className="chips">
+          {draft.draft.map((p) => (
+            <li key={p.id} className="chip">
+              #{p.id} {p.name}
+              <button onClick={() => draft.remove(p.id)} aria-label={`Quitar ${p.name}`} title="Quitar">
+                ×
               </button>
             </li>
           ))}
         </ul>
-      )}
-      {!draftIsFull && index && debouncedTerm.trim() && suggestions.length === 0 && (
-        <p style={{ color: '#666' }}>Ningún pokémon coincide con "{debouncedTerm.trim()}".</p>
-      )}
 
-      <p>
-        <button onClick={createTeam} disabled={missing.length > 0}>
-          Crear equipo
-        </button>{' '}
-        {missing.length > 0 && <small style={{ color: '#666' }}>Falta: {missing.join(' y ')}.</small>}
-      </p>
+        <input
+          className="full-width"
+          placeholder="Buscar pokémon por nombre o número (ej. pika, 25)"
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+          onKeyDown={onSearchKeyDown}
+          disabled={draft.isFull}
+        />
+        <small className="muted">
+          {draft.isFull
+            ? 'El equipo está completo.'
+            : index
+              ? '↑/↓ para elegir, Enter para agregar. También puedes agregar desde la Pokédex.'
+              : indexError
+                ? null
+                : 'Cargando catálogo…'}
+        </small>
+        {indexError && (
+          <p className="error">
+            {indexError} <button onClick={loadIndex}>Reintentar</button>
+          </p>
+        )}
+
+        {!draft.isFull && suggestions.length > 0 && (
+          <ul className="suggestions card" role="listbox">
+            {suggestions.map((p, i) => (
+              <li key={p.id} style={{ margin: 0 }}>
+                <button
+                  className="suggestion"
+                  role="option"
+                  aria-selected={i === highlighted}
+                  onClick={() => addToDraft(p)}
+                  onMouseEnter={() => setHighlighted(i)}
+                  disabled={draft.has(p.id)}
+                >
+                  #{p.id} {p.name} {draft.has(p.id) && <small className="muted">(ya en el equipo)</small>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {!draft.isFull && index && debouncedTerm.trim() && suggestions.length === 0 && (
+          <p className="muted">Ningún pokémon coincide con "{debouncedTerm.trim()}".</p>
+        )}
+
+        <div className="form-row" style={{ marginTop: 12 }}>
+          <button className="btn-primary" onClick={createTeam} disabled={missing.length > 0}>
+            Crear equipo
+          </button>
+          {missing.length > 0 && <small className="muted">Falta: {missing.join(' y ')}.</small>}
+        </div>
+      </section>
 
       <h2>Mis equipos ({teams.length})</h2>
-      <ul>
+      {teams.length === 0 && <p className="muted">Todavía no tienes equipos.</p>}
+      <ul className="team-list">
         {teams.map((t) => (
-          <li key={t.id}>
-            <strong>{t.name}</strong>: {t.members.map((m) => m.pokemonName).join(', ')}{' '}
-            <button onClick={() => deleteTeam(t)}>eliminar</button>
+          <li key={t.id} className="card team-card">
+            <div>
+              <strong>{t.name}</strong>
+              <div className="muted team-members">{t.members.map((m) => m.pokemonName).join(', ')}</div>
+            </div>
+            <button onClick={() => deleteTeam(t)}>Eliminar</button>
           </li>
         ))}
       </ul>

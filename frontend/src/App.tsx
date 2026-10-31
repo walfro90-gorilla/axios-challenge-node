@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from './context/AuthContext';
+import { TeamDraftProvider } from './context/TeamDraftContext';
 import { Login } from './pages/Login';
 import { Favorites } from './pages/Favorites';
 import { Teams } from './pages/Teams';
@@ -19,31 +20,23 @@ export function App() {
   if (!token) return <Login />;
 
   return (
-    <>
-      <nav style={{ borderBottom: '1px solid #ddd', fontFamily: 'system-ui' }}>
-        <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', gap: 16 }}>
-          {TABS.map((tab) => {
-            const active = tab.view === view;
-            return (
-              <button
-                key={tab.view}
-                onClick={() => setView(tab.view)}
-                aria-current={active ? 'page' : undefined}
-                style={{
-                  all: 'unset',
-                  cursor: 'pointer',
-                  padding: '12px 0',
-                  fontWeight: active ? 700 : 400,
-                  borderBottom: `3px solid ${active ? '#333' : 'transparent'}`,
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+    <TeamDraftProvider>
+      <nav className="tabs">
+        <div className="tabs-inner">
+          {TABS.map((tab) => (
+            <button
+              key={tab.view}
+              className="tab"
+              onClick={() => setView(tab.view)}
+              aria-current={tab.view === view ? 'page' : undefined}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </nav>
-      {view === 'favorites' ? <Favorites /> : <Teams />}
-    </>
+      {view === 'favorites' && <Favorites />}
+      {view === 'teams' && <Teams />}
+    </TeamDraftProvider>
   );
 }
