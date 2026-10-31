@@ -1,6 +1,6 @@
 # ADR-0009: Pantalla de Equipos con búsqueda debounced por nombre exacto
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado. Parcialmente reemplazado por [ADR-0010](./0010-autocompletado-local-con-indice-de-nombres.md) (estrategia de búsqueda). La premisa de que el autocompletado exigía cambiar `pokeapi.service.js` resultó **falsa**.
 - **Fecha:** 2026-10-30
 - **Reemplaza parcialmente:** ADR-0007 (la pantalla de Equipos pasa de "fuera" a "dentro" del alcance)
 
