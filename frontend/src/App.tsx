@@ -6,6 +6,11 @@ import { Teams } from './pages/Teams';
 
 type View = 'favorites' | 'teams';
 
+const TABS: { view: View; label: string }[] = [
+  { view: 'favorites', label: 'Favoritos' },
+  { view: 'teams', label: 'Equipos' },
+];
+
 export function App() {
   const { token } = useAuth();
   const [view, setView] = useState<View>('favorites');
@@ -15,13 +20,28 @@ export function App() {
 
   return (
     <>
-      <nav style={{ maxWidth: 640, margin: '16px auto 0', fontFamily: 'system-ui', display: 'flex', gap: 8 }}>
-        <button onClick={() => setView('favorites')} disabled={view === 'favorites'}>
-          Favoritos
-        </button>
-        <button onClick={() => setView('teams')} disabled={view === 'teams'}>
-          Equipos
-        </button>
+      <nav style={{ borderBottom: '1px solid #ddd', fontFamily: 'system-ui' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', gap: 16 }}>
+          {TABS.map((tab) => {
+            const active = tab.view === view;
+            return (
+              <button
+                key={tab.view}
+                onClick={() => setView(tab.view)}
+                aria-current={active ? 'page' : undefined}
+                style={{
+                  all: 'unset',
+                  cursor: 'pointer',
+                  padding: '12px 0',
+                  fontWeight: active ? 700 : 400,
+                  borderBottom: `3px solid ${active ? '#333' : 'transparent'}`,
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </nav>
       {view === 'favorites' ? <Favorites /> : <Teams />}
     </>
