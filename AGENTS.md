@@ -20,7 +20,7 @@ Reto técnico de Axios Mobile: Pokédex con JWT, Favoritos (referencia) y el mó
 ## Comandos
 ```bash
 cd backend && npm run dev      # API en :4000 (node --watch)
-cd backend && npm test         # Jest + Supertest, BD en memoria (26 tests)
+cd backend && npm test         # Jest + Supertest, BD en memoria (29 tests)
 cd backend && npm run lint
 cd backend && npm run seed     # recrea la BD de desarrollo (¡borra datos!)
 cd frontend && npm run dev     # Vite en :5173, proxy /api → :4000
@@ -48,10 +48,16 @@ Usuario demo: `demo@axiosmobile.mx` / `demo1234`. **Contiene datos del usuario: 
 - **PokeAPI `/pokemon/`** identifica formas: `deoxys` → 404, `025` → 404 (H-04).
 - **Modo estricto de React:** los efectos corren dos veces en desarrollo; cachear la **promesa** en curso para no duplicar peticiones (H-20).
 - **Los servidores en segundo plano** pueden cerrarse con la sesión de shell; comprobar `curl :4000/api/health` y `:5173` antes de una E2E (H-15).
+- **`/tmp` se limpia entre sesiones:** los scripts de QA viven en `/tmp/opencode/qa` y `/tmp/opencode/e2e` y hay que recrearlos (no están en el repo).
+- **En pruebas de red, usar el mismo predicado en `page.route` y `page.unroute`** y filtrar por `pathname` (un glob `**/api/**` también captura los módulos de Vite). Ver H-33.
+- **Comprobar el invariante en el servidor**, no el número de llamadas: un doble clic correcto son 2 POST y 1 DELETE, no 1 POST.
 
 ## Verificación E2E (fuera del repo)
-Scripts Playwright en `/tmp/opencode/e2e/` (`redesign.mjs` 36 pasos, `autocomplete.mjs` 21 pasos), con `playwright-core` y `/usr/bin/google-chrome`. **Cada ejecución registra un usuario nuevo** y nunca toca el demo (H-23). Además de las pruebas, revisar **capturas**: varios errores visuales sólo se vieron así (H-22, H-25).
+Scripts Playwright en `/tmp/opencode/e2e/`, con `playwright-core` y `/usr/bin/google-chrome`. **Cada ejecución registra un usuario nuevo** y nunca toca el demo (H-23). Además de las pruebas, revisar **capturas**: varios errores visuales sólo se vieron así (H-22, H-25).
+
+**QA a fondo (2026-10-31):** 54 comprobaciones de API (`curl`) + 38 de interfaz (Chrome headless: consola, red, imágenes rotas, desbordes, responsive, token vencido, backend caído, doble clic, red lenta) + el build de producción. **38/38 y 54/54 en verde** tras corregir H-28 a H-32.
 
 ## Estado actual
 - Challenge cumplido; mejoras pedidas (paginación, diseño, ♥/pokéball, Favoritos y Equipos) implementadas y verificadas.
+- QA a fondo hecha: backend, frontend, build de producción y fallas silenciosas. Sin hallazgos abiertos.
 - Ver los hallazgos ⏳ en `docs/FINDINGS.md` y "qué haría con más tiempo" en `docs/AI_USAGE.md`.

@@ -4,7 +4,9 @@ Todo problema, error o suposición falsa detectado durante el desarrollo: **cóm
 
 **Estados:** ✅ resuelto · 📄 limitación aceptada y documentada · ⏳ pendiente
 
-**Origen:** 🔍 revisión de consistencia · 🤖 revisión independiente (subagente) · 🧪 pruebas (tests, curl, E2E) · 👀 revisión visual o manual en el navegador · 🧠 revisión de código
+**Origen:** 🔍 revisión de consistencia · 🤖 revisión independiente (subagente) · 🧪 pruebas (tests, curl, E2E, QA) · 👀 revisión visual o manual en el navegador · 🧠 revisión de código
+
+La **QA a fondo** (2026-10-31) comprendió 54 comprobaciones de API y 38 de interfaz (Chrome headless), más el build de producción: encontró H-28 a H-33.
 
 ## Resumen
 
@@ -36,7 +38,13 @@ Todo problema, error o suposición falsa detectado durante el desarrollo: **cóm
 | H-24 | Columnas nuevas sin migraciones y con datos del usuario | 🧠 | ✅ | `ALTER TABLE` + fallback (ADR-0014) |
 | H-25 | CSS que anulaba el tamaño de los sprites | 👀 | ✅ | Incluido en `18ce015` |
 | H-26 | Apodo: doble `PATCH` con Enter y guardado al cancelar | 🧠 | ✅ | Incluido en `18ce015` |
-| H-27 | Avisos del panel *Issues* de DevTools | 👀 | ⏳ | Pendiente menor |
+| H-27 | Avisos del panel *Issues* de DevTools (inputs sin `autocomplete`) | 👀 | ✅ | `autoComplete` en el login |
+| H-28 | Nombres de pokémon imposibles devolvían 502 en vez de 4xx | 🧪 | ✅ | ADR-0016 · `6e54584` |
+| H-29 | Cuerpo mayor a 100 KB devolvía 500 | 🧪 | ✅ | ADR-0016 · `6e54584` |
+| H-30 | Favoritos sigue devolviendo 502 con nombres imposibles (no se puede tocar) | 🧪 | 📄 | ADR-0016 |
+| H-31 | Token expirado dejaba la app atrapada en "Cargando…" | 🧪 | ✅ | ADR-0017 |
+| H-32 | Backend caído dejaba la pantalla en blanco; el login decía "Failed to fetch" | 🧪 | ✅ | ADR-0017 |
+| H-33 | Pruebas propias mal planteadas (interceptaban módulos de Vite; `unroute` con otro predicado) | 🧪 | ✅ | Corrección de las pruebas |
 
 ---
 
@@ -136,10 +144,44 @@ Todo problema, error o suposición falsa detectado durante el desarrollo: **cóm
 - **Solución:** una bandera `finished` (`useRef`) marca la edición como terminada; Esc la cierra sin guardar.
 - **Verificación:** E2E: Enter → exactamente 1 `PATCH`; Esc → 0 `PATCH` y el apodo se conserva.
 
-### H-27 · Avisos del panel *Issues* de DevTools ⏳
-- **Detección:** 👀, ícono 🚩1 en la captura del usuario. No es un error de consola.
-- **Causa probable:** inputs sin `id`/`name` (p. ej. en `Login.tsx`, del boilerplate).
-- **Pendiente:** confirmar el aviso exacto. Si viene de `Login.tsx`, decidir si se toca el boilerplate.
+### H-27 · Avisos del panel *Issues* de DevTools ✅
+- **Detección:** 👀, ícono 🚩1 en la captura del usuario (no era un error de consola).
+- **Causa:** los inputs del login no tenían `autocomplete`. Chrome lo avisa en el panel *Issues* y en consola como `[DOM] Input elements should have autocomplete attributes`.
+- **Solución:** `autoComplete="username"` y `autoComplete="current-password"` en `Login.tsx`. Se corrigió sólo el atributo: ni la lógica ni la estructura del boilerplate cambian.
+- **Verificación:** tras el cambio, la consola del login queda sin avisos.
+
+### H-28 · Nombres de pokémon imposibles devolvían 502 en vez de 4xx ✅
+- **Detección:** 🧪, QA de backend con `{"pokemon":"../users"}` → **502 "PokeAPI respondió 403"**.
+- **Causa:** la PokeAPI responde **403** a nombres que no son slugs, y `pokeapi.service.js` traduce cualquier respuesta distinta de 404 en 502. Un error del usuario parecía una caída de la PokeAPI. Afectaba a `POST /api/teams` y `GET /api/pokemon/:name`.
+- **Solución:** validar el formato (`/^[a-z0-9-]+$/i`) antes de consultar la PokeAPI → **400** al crear y **404** en el detalle (ADR-0016). `pokeapi.service.js` no se modificó.
+- **Verificación:** test `responde 400 ante cuerpo mal formado (nombre con caracteres no válidos)` y `un nombre que no es slug responde 404 sin consultar la PokeAPI` (comprueba además que no sale ninguna petición). **Prueba de mutación:** sin el arreglo ambos tests fallan. Se verificó contra el catálogo real que **los 1351 nombres cumplen el patrón**, así que no se bloquea ningún pokémon.
+
+### H-29 · Cuerpo mayor a 100 KB devolvía 500 ✅
+- **Detección:** 🧪, QA de backend: body de 200 KB → **500 "Error interno del servidor"**.
+- **Causa:** body-parser lanza `entity.too.large` (413) y el manejador de errores lo trataba como error genérico.
+- **Solución:** caso específico en `error.middleware.js` → **413** "El cuerpo de la petición es demasiado grande" (ADR-0016).
+- **Verificación:** test `responde 413 (no 500) ante un cuerpo demasiado grande` (prueba de mutación: falla sin el arreglo).
+
+### H-30 · Favoritos sigue devolviendo 502 con nombres imposibles 📄
+- El módulo de Favoritos **no se puede tocar** (regla del reto), así que `POST /api/favorites { "pokemon": "../x" }` sigue respondiendo 502. Limitación documentada en el ADR-0016 y en "qué haría con más tiempo".
+
+### H-31 · Token expirado dejaba la app atrapada en "Cargando…" ✅
+- **Detección:** 🧪, QA de frontend: con un token inválido en `localStorage`, el root quedaba vacío y la app **no volvía al login** (ni una sola forma de recuperarse).
+- **Causa:** `AuthContext` leía el token de `localStorage` y lo daba por válido; ninguna petición lo validaba al arrancar.
+- **Solución:** `AuthProvider` valida el token con `GET /api/auth/me` al arrancar: un **401** cierra la sesión y vuelve al login; un **error de red** conserva la sesión y muestra "Sin conexión con el servidor" (ADR-0017). Además, un 401 en caliente (con la app abierta) limpia el token y vuelve al login.
+- **Verificación:** E2E — `token inválido: vuelve al login`, `el token se limpia`, `no queda "Cargando…" colgado` y `401 en caliente: vuelve al login automáticamente`.
+
+### H-32 · Backend caído dejaba la pantalla en blanco; el login decía "Failed to fetch" ✅
+- **Detección:** 🧪, QA de frontend: al recargar con el backend fuera de servicio, el `#root` quedaba **vacío** (pantalla en blanco, sin error). Y al fallar el login, el mensaje era el texto crudo `Failed to fetch` (en inglés y técnico).
+- **Causa:** (1) el fallo de red durante la validación de sesión no distinguía "sin servidor" de "sin sesión"; (2) `fetch` rechaza con un `TypeError` genérico que se mostraba tal cual.
+- **Solución:** pantalla "Sin conexión con el servidor" con botón **Reintentar** que vuelve a comprobar la sesión, y traducción de los fallos de red en `client.ts` (ADR-0017). El mensaje lo heredan todas las pantallas y el login del boilerplate sin tocarlo.
+- **Verificación:** E2E — `backend caído al recargar: avisa con botón Reintentar` y `"Reintentar" restaura la sesión`, en las tres pantallas.
+
+### H-33 · Pruebas propias mal planteadas ✅
+- **Interceptación demasiado amplia:** `page.route('**/api/**')` también capturaba `/src/api/client.ts` (los módulos de Vite), lo que provocaba un `#root` vacío **falso**. El error de consola lo delató: la URL del recurso fallido era un módulo, no una petición a la API.
+- **`unroute` con otro predicado:** `page.unroute((u) => ...)` no quita una ruta registrada con una función distinta, así que la interceptación seguía activa y "Reintentar" fallaba sin que fuera un fallo de la app.
+- **Assertion equivocada:** el doble clicaba y la prueba esperaba 1 POST, cuando la secuencia correcta (agregar → quitar → agregar) son 2 POST y 1 DELETE. La comprobación real es que **en el servidor quede un solo favorito**.
+- **Lección:** en pruebas de red, usar el mismo predicado en `route` y `unroute`, prefijar por `pathname` en vez de glob sobre la URL completa, y comprobar el invariante en el servidor en vez de contar llamadas.
 
 ## Proceso, pruebas y entorno
 
