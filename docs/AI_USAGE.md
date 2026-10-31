@@ -21,6 +21,7 @@ Trabajé en modo **"decisiones primero, código después"**, con puntos de contr
 4. **Revisión de consistencia:** antes de implementar, le pedí cotejar todos los `.md` del reto contra los ADRs y verificar contra el código real. De ahí salieron 3 errores y 4 huecos en los ADRs, y 3 decisiones que tomé yo.
 5. **Implementación por fases** con commits convencionales, tests y pruebas con `curl` contra la PokeAPI real.
 6. **Revisión independiente** por un subagente, cuyos hallazgos se clasificaron en corregir / documentar / descartar.
+7. **Mejora posterior a la entrega:** pedí una pantalla de Equipos con búsqueda **debounced** (que no llame a la API en cada tecla). Primero se registró como ADR-0009 y después se verificó con un navegador headless que **cuenta las peticiones**.
 
 ## 3. Prompts clave
 
@@ -56,6 +57,12 @@ C. si  (nombre de equipo máx. 50 caracteres → 400)
 ```
 **Para qué lo usé / resultado:** la IA presentó opciones con su recomendación y yo decidí. La decisión A se convirtió en el ADR-0008, con su propio commit `fix:` y su test.
 
+### Prompt 5: debounce en la búsqueda
+```
+quiero agregar mejoras, como debounce; no estar llamando la api cada que se busca, si no tenerlo debounced.
+```
+**Para qué lo usé / resultado:** la IA revisó primero el frontend y me hizo notar que **no existía ningún buscador** (Favoritos carga una lista fija de 20) y que la PokeAPI **no busca por texto parcial**. Me presentó opciones y elegí: pantalla de Equipos (bonus, sin tocar Favoritos) + búsqueda por nombre exacto con debounce de 400 ms, cancelación con `AbortController` y caché de resultados (incluidos los 404). Verificación E2E: escribiendo como una persona salieron **4 peticiones** en todo el recorrido; con el debounce desactivado, **32**.
+
 ## 4. Qué acepté, rechacé o corregí de la IA
 
 | Sugerencia de la IA | ¿Acepté / rechacé / corregí? | ¿Por qué? |
@@ -68,6 +75,9 @@ C. si  (nombre de equipo máx. 50 caracteres → 400)
 | Reformatear con Prettier los archivos del boilerplate que no pasaban `--check` | **Rechacé** | Eran avisos previos (se verificó contra `main`). Reformatearlos ensuciaría el diff con cambios ajenos al reto. |
 | Hallazgos del subagente revisor (11) | **Acepté 4 correcciones, documenté 4, descarté 1** (los 2 restantes ya estaban previstos para la última fase) | Correcciones: `DELETE /1.0` borraba el equipo 1 (afinidad de tipos de SQLite), orden inestable, mensaje confuso y tests que no cubrían lo que los ADRs prometían. Documentados: concurrencia SQLite, asimetría de validación, `422`/`502` no determinista. |
 | Configurar `busyTimeout` para arreglar `SQLITE_BUSY` con `POST` concurrentes | **Rechacé tras probarlo** | Se aplicó en forma temporal, se midió (seguía habiendo 7–24 errores de cada 30) y se revirtió. Quedó como limitación documentada en el ADR-0006. |
+| Autocompletado parcial ("pik" → pikachu) para el buscador | **Rechacé** | Exigía cambiar el límite de 100 de `pokeapi.service.js` o reimplementar la PokeAPI, que el reto penaliza. Elegí búsqueda exacta con debounce (ADR-0009). |
+| Librería de debounce o React Router | **Rechacé** | Dependencias nuevas para ~10 líneas y dos pantallas. |
+| Confiar en que el debounce funcionaba porque compila | **Corregí** | Se exigió una prueba E2E que cuenta peticiones, y se comprobó que **falla** con el debounce desactivado (32 peticiones frente a 4). |
 | Usar `retry` de Sequelize ante `SQLITE_BUSY` (sugerencia del subagente) | **Pospuse** | Toca `config/database.js` (compartido) y no se verificó. Queda en "qué haría con más tiempo". |
 
 ## 5. Decisiones de diseño que tomaste tú
@@ -82,6 +92,7 @@ Lo que yo dirigí o decidí (la IA propuso opciones y redactó, pero no decidió
 - **Nombre máx. 50 caracteres → `400`.**
 - **Entrega:** trabajar sobre un **fork propio** (`walfro90-gorilla/axios-challenge-node`) en la rama `feat/teams-module`.
 - **Herramienta:** usar sólo Claude Opus y documentar honestamente su uso.
+- **Debounce en la búsqueda:** la mejora fue idea mía. Elegí la pantalla de Equipos y la búsqueda por nombre exacto entre las opciones presentadas.
 
 Las decisiones que venían dictadas por el reto (máx. 6 → `422`, especie inexistente → `422` reutilizando `pokeapi.service.js`, ownership → `404`) quedaron registradas en los ADRs 0003–0005.
 
@@ -98,7 +109,8 @@ Lección: la IA escribió afirmaciones plausibles pero falsas en su propia docum
 ## 7. ¿Qué harías distinto con más tiempo?
 
 - Resolver la concurrencia de escritura en SQLite (`retry` ante `SQLITE_BUSY` o modo WAL); en producción, Postgres.
-- `GET /api/teams/:id` y `PATCH /api/teams/:id`, y la pantalla de Equipos en el frontend.
+- `GET /api/teams/:id` y `PATCH /api/teams/:id`.
+- Tests automatizados de frontend (Vitest + Testing Library) para el hook de debounce y la pantalla de Equipos; hoy se verifica con `tsc` y una prueba E2E manual.
 - Validar especies reales (`/pokemon-species/`) y normalizar ids como `025`. Implica evolucionar `pokeapi.service.js` (beneficiaría también a Favoritos).
 - Reportar todas las especies inválidas a la vez (`Promise.allSettled`) con una precedencia clara entre `422` y `502`.
 - Reintentos ante `429`/`5xx` de la PokeAPI.

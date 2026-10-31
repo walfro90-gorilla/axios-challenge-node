@@ -77,7 +77,7 @@ npm test
 
 ```
 backend/         API Express + Sequelize (auth, pokemon, favorites)
-frontend/        React + Vite (login + pantalla de favoritos)
+frontend/        React + Vite (login + pantallas de favoritos y equipos)
 docs/            Arquitectura, ADRs (docs/adr/), plan de implementación, uso de IA, rúbrica
 CHALLENGE.md     El reto que debes resolver
 ```
