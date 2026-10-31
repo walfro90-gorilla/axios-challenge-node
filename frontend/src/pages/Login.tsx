@@ -31,6 +31,7 @@ export function Login() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="email"
+          autoComplete="username"
           required
         />
         <input
@@ -38,6 +39,7 @@ export function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="password"
+          autoComplete="current-password"
           required
         />
         <button type="submit" disabled={loading}>
