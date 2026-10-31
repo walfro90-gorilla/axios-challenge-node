@@ -20,3 +20,6 @@ Cada ADR sigue el formato de Michael Nygard: **Contexto → Decisión → Consec
 | [0008](./0008-json-malformado-responde-400.md) | JSON con sintaxis inválida responde `400`, no `500` | Aceptado |
 | [0009](./0009-pantalla-de-equipos-con-busqueda-debounced.md) | Pantalla de Equipos con búsqueda debounced por nombre exacto | Aceptado (parcialmente reemplazado por 0010) |
 | [0010](./0010-autocompletado-local-con-indice-de-nombres.md) | Autocompletado local con índice de nombres | Aceptado |
+| [0011](./0011-listado-de-pokemon-con-detalles.md) | Listado paginado de pokémon con detalles (`?details=true`) | Aceptado |
+| [0012](./0012-pestana-pokedex-paginada.md) | Pestaña Pokédex paginada con borrador de equipo compartido | Aceptado |
+| [0013](./0013-estilos-globales-css-propio.md) | Estilos con CSS propio, sin dependencias | Aceptado |
