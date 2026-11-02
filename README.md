@@ -48,6 +48,9 @@ npm run dev               # arranca en http://localhost:5173
 
 Abre http://localhost:5173, inicia sesión con el usuario demo y verás el catálogo de pokémon y tus favoritos. El frontend hace proxy de `/api` hacia el backend (ver `frontend/vite.config.ts`).
 
+> **¿Ya tenías una base local de una versión anterior?** Los miembros de equipo ahora guardan foto y tipos (ADR-0014). Como el proyecto usa `sync()` sin migraciones, ejecuta `npm run seed` para recrear la base, o agrega las columnas a mano:
+> `ALTER TABLE team_members ADD COLUMN sprite VARCHAR(255);` y `ALTER TABLE team_members ADD COLUMN types JSON NOT NULL DEFAULT '[]';`
+
 ### 3. Tests del backend
 
 ```bash
@@ -63,19 +66,23 @@ npm test
 | POST | `/api/auth/register` | — | Registra un usuario |
 | POST | `/api/auth/login` | — | Devuelve un JWT |
 | GET | `/api/auth/me` | ✅ | Usuario actual |
-| GET | `/api/pokemon?limit&offset` | ✅ | Listado (proxy PokeAPI) |
+| GET | `/api/pokemon?limit&offset[&details=true]` | ✅ | Listado (proxy PokeAPI); con `details=true` incluye foto y tipos |
 | GET | `/api/pokemon/:name` | ✅ | Detalle de un pokémon |
 | GET | `/api/favorites` | ✅ | Lista tus favoritos |
 | POST | `/api/favorites` | ✅ | Agrega un favorito |
 | PATCH | `/api/favorites/:id` | ✅ | Actualiza el nickname |
 | DELETE | `/api/favorites/:id` | ✅ | Elimina un favorito |
+| GET | `/api/teams` | ✅ | Lista tus equipos con sus miembros |
+| POST | `/api/teams` | ✅ | Crea un equipo `{ name, pokemon: [nombre o id, …] }` (1–6, sin repetidos) |
+| DELETE | `/api/teams/:id` | ✅ | Elimina un equipo propio |
 
 ## Estructura
 
 ```
 backend/         API Express + Sequelize (auth, pokemon, favorites)
-frontend/        React + Vite (login + pantalla de favoritos)
-docs/            Arquitectura, plantilla de uso de IA, rúbrica de evaluación
+frontend/        React + Vite (login + pestañas Pokédex paginada, Favoritos y Equipos)
+docs/            Arquitectura, ADRs (docs/adr/), plan, hallazgos (FINDINGS.md), uso de IA, rúbrica
+AGENTS.md        Memoria del proyecto para agentes de IA (reglas, comandos, trampas conocidas)
 CHALLENGE.md     El reto que debes resolver
 ```
 
