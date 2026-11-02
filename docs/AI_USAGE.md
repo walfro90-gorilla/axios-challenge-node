@@ -24,8 +24,8 @@ Trabajé en modo **"decisiones primero, código después"**, con puntos de contr
 7. **Mejora posterior a la entrega:** pedí una pantalla de Equipos con búsqueda **debounced** (que no llame a la API en cada tecla). Primero se registró como ADR-0009 y después se verificó con un navegador headless que **cuenta las peticiones**.
 8. **Revisión manual en el navegador:** al probarla yo mismo con DevTools vi errores en la consola. Con esa captura le pedí a la IA revisar y mejorar, y de ahí salió el ADR-0010 (autocompletado local) más 5 mejoras de UI que elegí.
 9. **Pedido de revisión:** me pidieron agregar paginación y que se viera bien. Con la IA definí el alcance (ADRs 0011–0013), se implementó con E2E y se pulió a partir de capturas de pantalla.
-11. **QA a fondo (a petición tuya):** se verificó backend, frontend, build de producción y fallas silenciosas (token vencido, backend caído, doble clic, red lenta). Salieron 6 hallazgos de la app y 3 de las pruebas propias.
 10. **Rediseño de Favoritos y Equipos:** pedí corazón para favorito, pokéball para equipo y una mejora considerable de la UI/UX. Decidí las dos disyuntivas (página nueva de favoritos y guardar fotos en los miembros) y la IA implementó, probó (36 pasos E2E) y pulió a partir de capturas.
+11. **QA a fondo (a petición mía):** se verificó backend, frontend, build de producción y fallas silenciosas (token vencido, backend caído, doble clic, red lenta). Salieron 6 hallazgos de la app y 3 de las pruebas propias.
 
 ## 3. Prompts clave
 
@@ -81,19 +81,19 @@ podemos agregar paginación y agregar más datos de la API, fotos, tipo? o qué 
 ```
 **Para qué lo usé / resultado:** la IA revisó qué datos ya exponía el servicio (foto y tipos sí; estadísticas no, porque exigían modificar `pokeapi.service.js`) y me planteó opciones con sus trade-offs: dónde paginar sin romper la regla de no tocar Favoritos, cómo evitar 21 peticiones por página y CSS propio frente a Tailwind. Elegí: pestaña Pokédex nueva, foto y tipos agregados en el backend (`details=true`), CSS propio y el mismo PR.
 
-### Prompt 9: QA a fondo
-```
-haz un hard testing QA; verificando varios puntos, si falla frontend, backend, revisa f12 y si todo carga
-correcto, o si hay fallas silenciosas.
-```
-**Para qué lo usé / resultado:** la IA construyó dos baterías de QA (54 comprobaciones de API con `curl` y 38 de interfaz con Chrome headless, contando peticiones y revisando consola, imágenes rotas y desbordes) y encontró **6 problemas reales**: dos entradas inválidas que devolvían 5xx, un token expirado que dejaba la app atrapada en "Cargando…", una pantalla en blanco con el backend caído, el mensaje crudo `Failed to fetch`, y los inputs del login sin `autocomplete`. También se detectaron **tres pruebas propias mal planteadas** (interceptaban módulos de Vite; `unroute` con otro predicado; una assertion que contaba llamadas en vez del invariante), que se corrigieron antes de reportar nada.
-
 ### Prompt 8: corazón, pokéball y rediseño
 ```
 mejora la sección favorito y equipo. Mejora la UI/UX, agrega un corazón en favorito y una pokéball
 en equipo. Y en sí mejóralo considerablemente
 ```
 **Para qué lo usé / resultado:** antes de diseñar, la IA me planteó dos disyuntivas: (1) mejorar Favoritos chocaba con la regla de no tocar ese módulo, y (2) para mostrar fotos en los equipos había que guardarlas o pedirlas en cada carga. Elegí una página nueva de favoritos (`Favorites.tsx` intacto) y guardar foto y tipos en los miembros. La IA detectó además que yo tenía un equipo y favoritos propios en la base local: **en lugar de recrear las tablas agregó las columnas con `ALTER TABLE`** (con respaldo previo) y cambió las pruebas E2E para usar un usuario nuevo en cada ejecución.
+
+### Prompt 9: QA a fondo
+```
+haz un hard testing QA; verificando varios puntos, si falla frontend, backend, revisa f12 y si todo carga
+correcto, o si hay fallas silenciosas.
+```
+**Para qué lo usé / resultado:** la IA construyó dos baterías de QA (54 comprobaciones de API con `curl` y 38 de interfaz con Chrome headless, contando peticiones y revisando consola, imágenes rotas y desbordes) y encontró **6 problemas reales**: dos entradas inválidas que devolvían 5xx, un token expirado que dejaba la app atrapada en "Cargando…", una pantalla en blanco con el backend caído, el mensaje crudo `Failed to fetch`, y los inputs del login sin `autocomplete`. También se detectaron **tres pruebas propias mal planteadas** (interceptaban módulos de Vite; `unroute` con otro predicado; una assertion que contaba llamadas en vez del invariante), que se corrigieron antes de reportar nada.
 
 ## 4. Qué acepté, rechacé o corregí de la IA
 
@@ -144,7 +144,7 @@ Las decisiones que venían dictadas por el reto (máx. 6 → `422`, especie inex
 
 ## 6. ¿Dónde te falló o te "alucinó" la IA?
 
-> El registro completo de hallazgos (27, con causa, solución y verificación) está en [`FINDINGS.md`](./FINDINGS.md). Aquí sólo los relacionados con errores de la IA.
+> El registro completo de hallazgos (33, con causa, solución y verificación) está en [`FINDINGS.md`](./FINDINGS.md). Aquí sólo los relacionados con errores de la IA.
 
 - **Afirmación falsa sobre la caché (ADR-0005).** La IA aseguró que la caché evitaba consultas repetidas dentro de un equipo; con `Promise.all` no es así. Lo detectó la propia IA, pero **sólo porque le pedí la revisión de consistencia**.
 - **Afirmación falsa sobre la cobertura de tests (plan).** El plan decía que un test "cubría la cascada de forma indirecta". El subagente revisor señaló que no: el test pasaría aunque la cascada no existiera. Se agregó una verificación explícita (`TeamMember.count() === 0`).
@@ -166,8 +166,6 @@ Lección: la IA escribió afirmaciones plausibles pero falsas en su propia docum
 ## 7. ¿Qué harías distinto con más tiempo?
 
 - Versionar las pruebas E2E en el repo (hoy viven fuera, en `/tmp`) y correrlas en CI.
-- Resolver el aviso pendiente del panel *Issues* de DevTools (H-27).
-
 - Resolver la concurrencia de escritura en SQLite (`retry` ante `SQLITE_BUSY` o modo WAL); en producción, Postgres.
 - `GET /api/teams/:id` y `PATCH /api/teams/:id`.
 - Tests automatizados de frontend (Vitest + Testing Library) para el hook de debounce, `searchPokemon` y la pantalla de Equipos, y versionar la prueba E2E (Playwright). Hoy se verifica con `tsc` y una prueba E2E manual fuera del repo.

@@ -60,4 +60,4 @@ Scripts Playwright en `/tmp/opencode/e2e/`, con `playwright-core` y `/usr/bin/go
 ## Estado actual
 - Challenge cumplido; mejoras pedidas (paginación, diseño, ♥/pokéball, Favoritos y Equipos) implementadas y verificadas.
 - QA a fondo hecha: backend, frontend, build de producción y fallas silenciosas. Sin hallazgos abiertos.
-- Ver los hallazgos ⏳ en `docs/FINDINGS.md` y "qué haría con más tiempo" en `docs/AI_USAGE.md`.
+- Sin hallazgos ⏳ en `docs/FINDINGS.md`; las limitaciones aceptadas (📄) y "qué haría con más tiempo" están en `docs/AI_USAGE.md`.
